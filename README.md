@@ -1,51 +1,36 @@
-# PaTech AI Workstation Bootstrap
+# AI Workstation Bootstrap
 
-Bootstrap-repository voor de mobiele AI-workstation `patech-wsa-01`.
+Herbruikbare bootstrap repository voor een Windows 11 mobiele AI-workstation met WSL2, Docker Desktop, Ollama, Open WebUI, Hermes Agent, Honcho, OpenAI Codex CLI en Claude CLI/Code.
 
-Uitgangspunt:
+## Uitgangspunten
 
-- Windows 11 als primaire host
-- WSL2 Ubuntu als technische werklaag
-- Docker Desktop met WSL2-backend
-- Ollama en Open WebUI voor lokale AI-runtime
-- Hermes Agent als primaire agentlaag
-- Honcho als lokale memory-laag
-- OpenAI Codex CLI via OAuth
-- Claude Code/CLI via Anthropic
-- Herbruikbaar, scriptbaar en geschikt voor beheer via Gitea
+- Host OS: Windows 11 Pro
+- Primaire werklaag: WSL2 Ubuntu 24.04
+- Container runtime: Docker Desktop met WSL2 backend
+- Lokale LLM runtime: Ollama
+- UI: Open WebUI
+- Agentlaag: Hermes Agent
+- Memorylaag: Honcho
+- Code tooling: OpenAI Codex CLI en Claude CLI/Code
+- Repo doel: herhaalbaar, veilig, uitbreidbaar en geschikt voor Gitea
 
-## Naming convention
+## Eerste gebruik
 
-```text
-<organisatie>-<rol>-<nummer>
-
-patech-wsa-01   = AI workstation
-patech-web-01   = webserver
-patech-rp-01    = reverse proxy
-patech-git-01   = Gitea
-patech-doc-01   = Outline
-patech-ai-01    = centrale AI-services
-```
-
-Zones horen bij DNS, firewall, IaC-tags of documentatie, niet in de hostname zelf.
-
-## Snelle start
-
-1. Pak de laptop uit en voltooi Windows 11 setup.
-2. Draai Windows Update en vendor firmware updates.
-3. Open PowerShell als Administrator.
-4. Voer uit:
+1. Clone deze repository naar de Windows-machine.
+2. Open PowerShell als Administrator.
+3. Draai:
 
 ```powershell
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\scripts\windows\00-set-hostname.ps1
-.\scripts\windows\01-enable-wsl.ps1
-.\scripts\windows\02-install-winget-packages.ps1
-.\scripts\windows\03-windows-security-baseline.ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\scripts\windows\00-enable-wsl.ps1
+.\scripts\windows\01-install-winget-packages.ps1
+.\scripts\windows\02-windows-security-baseline.ps1
+.\scripts\windows\04-remove-windows-bloatware.ps1
 ```
 
-5. Herstart wanneer nodig.
-6. Start Ubuntu en voer uit:
+4. Herstart indien nodig.
+5. Start Ubuntu 24.04 eenmalig en maak je Linux user aan.
+6. Vanuit WSL:
 
 ```bash
 cd /mnt/c/path/to/ai-workstation-bootstrap
@@ -55,11 +40,52 @@ chmod +x scripts/wsl/*.sh
 ./scripts/wsl/02-ai-tools.sh
 ./scripts/wsl/03-hermes-agent.sh
 ./scripts/wsl/04-honcho.sh
-./scripts/wsl/05-codex-claude.sh
-./scripts/wsl/06-models-ollama.sh
+./scripts/wsl/05-codex-cli.sh
+./scripts/wsl/06-claude-cli.sh
+./scripts/wsl/07-models-ollama.sh
 ./scripts/wsl/99-verify-wsl.sh
 ```
 
-## Let op
+## Belangrijke volgorde
 
-Hermes Agent en Honcho kunnen afhankelijk zijn van jouw actuele eigen installatiemethode, repo of packagebron. De scripts zijn daarom bewust veilig en idempotent opgezet: ze installeren generieke dependencies, maken directories en templates aan, en falen niet hard als de exacte bron nog ingevuld moet worden.
+1. Windows updates, firmware en NVIDIA driver.
+2. BitLocker, security baseline en bloatware verwijderen.
+3. WSL2 + Ubuntu.
+4. Docker Desktop met WSL integration.
+5. Gitea SSH-key.
+6. Dev tooling.
+7. AI runtime.
+8. Hermes, Honcho, Codex en Claude.
+9. Lokale modellen.
+10. Verificatie.
+
+## Windows bloatware verwijderen
+
+De repo bevat een conservatief Windows 11 debloat script:
+
+```powershell
+.\scripts\windows\04-remove-windows-bloatware.ps1
+```
+
+Eerst controleren zonder wijzigingen kan met:
+
+```powershell
+.\scripts\windows\04-remove-windows-bloatware.ps1 -WhatIfOnly
+```
+
+OneDrive wordt standaard niet verwijderd. Dat kan expliciet met:
+
+```powershell
+.\scripts\windows\04-remove-windows-bloatware.ps1 -RemoveOneDrive
+```
+
+## Secrets
+
+Zet tokens nooit in Git. Gebruik:
+
+- Windows Credential Manager
+- WSL environment files buiten de repo
+- `.env.local`, maar commit deze nooit
+- SSH keys in `~/.ssh`
+
+Zie `.gitignore`.

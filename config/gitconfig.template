@@ -1,9 +1,12 @@
 [user]
     name = Pascal van de Bor
     email = vandeborp@gmail.com
+
 [init]
     defaultBranch = main
+
 [pull]
     rebase = false
+
 [core]
-    editor = code --wait
+    autocrlf = input

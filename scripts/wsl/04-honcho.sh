@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mkdir -p "$HOME/.honcho/data"
+echo "Preparing Honcho local memory service..."
 
-if [ ! -f "$HOME/.honcho/config.yaml" ]; then
-  cp config/honcho-config.template.yaml "$HOME/.honcho/config.yaml"
+if [ -f "compose/honcho.compose.yml" ]; then
+  docker compose -f compose/honcho.compose.yml up -d || {
+    echo "Honcho Docker start failed. Check whether the image/tag is available or update compose/honcho.compose.yml."
+    exit 0
+  }
 fi
 
-cat <<'MSG'
-Honcho preparation complete.
-
-Next manual step:
-- Add the exact Honcho install/run method used in your environment.
-- Recommended: keep Honcho local-only unless deliberately exposed.
-MSG
+echo "Honcho check:"
+curl -fsS http://localhost:8000/health || echo "Honcho health endpoint not reachable yet; verify the selected Honcho image/config."

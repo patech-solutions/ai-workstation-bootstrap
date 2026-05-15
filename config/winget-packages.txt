@@ -2,7 +2,6 @@ Git.Git
 Microsoft.VisualStudioCode
 Docker.DockerDesktop
 Microsoft.PowerShell
-Microsoft.WindowsTerminal
 OpenJS.NodeJS.LTS
 Python.Python.3.12
 7zip.7zip
@@ -10,3 +9,4 @@ Notepad++.Notepad++
 WinSCP.WinSCP
 PuTTY.PuTTY
 Ollama.Ollama
+Microsoft.WindowsTerminal

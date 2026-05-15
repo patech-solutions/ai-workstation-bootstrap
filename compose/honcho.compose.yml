@@ -1,0 +1,17 @@
+# Generieke Honcho container-template.
+# Pas image/command aan op jouw gekozen Honcho distributie als je een andere installatiebron gebruikt.
+
+services:
+  honcho:
+    image: ghcr.io/plastic-labs/honcho:latest
+    container_name: honcho
+    ports:
+      - "8000:8000"
+    volumes:
+      - honcho-data:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/honcho.db
+    restart: unless-stopped
+
+volumes:
+  honcho-data:

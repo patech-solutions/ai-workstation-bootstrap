@@ -1,0 +1,25 @@
+# Voorbeeldconfiguratie. Pas aan op jouw bestaande Hermes Agent setup.
+
+provider:
+  primary: openrouter
+  api_mode: chat_completions
+
+routing:
+  profiles:
+    fast:
+      model: qwen/qwen3.6-flash
+    code:
+      model: qwen/qwen3.6-plus
+    reason:
+      model: deepseek/deepseek-r1
+    write:
+      model: qwen/qwen3.6-plus
+    premium:
+      model: claude-sonnet-4-6
+
+local:
+  ollama_base_url: http://localhost:11434
+
+memory:
+  provider: honcho
+  url: http://localhost:8000
