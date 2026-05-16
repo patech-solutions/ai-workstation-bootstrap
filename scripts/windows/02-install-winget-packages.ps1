@@ -8,6 +8,6 @@ Get-Content $PackageFile | ForEach-Object {
     $pkg = $_.Trim()
     if ($pkg -and -not $pkg.StartsWith("#")) {
         Write-Host "Installing $pkg"
-        winget install --id $pkg --exact --accept-package-agreements --accept-source-agreements
+        winget install --id $pkg --exact --source winget --accept-package-agreements --accept-source-agreements
     }
 }
