@@ -1,199 +1,418 @@
-<#
+<# 
 .SYNOPSIS
-  Removes or disables consumer/gaming/OEM noise for PaTech AI workstation.
+  PaTech Windows 11 bloatware cleanup script for patech-wsa-01.
 
 .DESCRIPTION
-  Safe-ish baseline for patech-wsa-01. Removes common Windows consumer apps,
-  disables Xbox/Game Bar/Widgets/Copilot taskbar bits where possible, and disables
-  auto-start entries for MSI/SteelSeries/Nahimic style tooling without uninstalling
-  drivers or firmware utilities.
+  Removes common consumer/OEM bloatware and specifically targets Norton/Symantec/Norton 360 for Gamers.
+  Designed for a Windows 11 AI/dev workstation baseline.
+
+  Safe defaults:
+  - Does NOT disable Windows Defender
+  - Does NOT disable Windows Firewall
+  - Does NOT remove Microsoft Store framework packages
+  - Does NOT remove WSL/Docker/Terminal tooling
 
 .PARAMETER WhatIfOnly
-  Runs in dry-run mode. Shows what would be changed.
+  Shows what would be removed/changed without performing destructive actions.
 
-.NOTES
-  Run as the target user after Windows setup. Some HKLM operations need Admin.
+.PARAMETER AggressiveNortonCleanup
+  Also removes leftover Norton/Symantec folders when possible.
+
+.EXAMPLE
+  .\04-remove-windows-bloatware.ps1 -WhatIfOnly
+
+.EXAMPLE
+  .\04-remove-windows-bloatware.ps1
+
+.EXAMPLE
+  .\04-remove-windows-bloatware.ps1 -AggressiveNortonCleanup
 #>
 
+[CmdletBinding()]
 param(
-    [switch]$WhatIfOnly
+    [switch]$WhatIfOnly,
+    [switch]$AggressiveNortonCleanup
 )
 
 $ErrorActionPreference = "Continue"
 
-function Invoke-Change {
+$LogDir = Join-Path $env:ProgramData "PaTech\Bootstrap\Logs"
+New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+$LogFile = Join-Path $LogDir ("bloatware-cleanup-{0}.log" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
+
+function Write-Log {
     param(
-        [string]$Description,
-        [scriptblock]$Action
+        [Parameter(Mandatory=$true)][string]$Message,
+        [ValidateSet("INFO","WARN","ERROR","OK","DRYRUN")][string]$Level = "INFO"
+    )
+    $line = "[{0}] [{1}] {2}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Level, $Message
+    Write-Host $line
+    Add-Content -Path $LogFile -Value $line
+}
+
+function Invoke-Step {
+    param(
+        [Parameter(Mandatory=$true)][string]$Description,
+        [Parameter(Mandatory=$true)][scriptblock]$Action
     )
 
-    Write-Host "==> $Description" -ForegroundColor Cyan
     if ($WhatIfOnly) {
-        Write-Host "WHATIF: $Description" -ForegroundColor Yellow
+        Write-Log "Would run: $Description" "DRYRUN"
         return
     }
 
+    Write-Log $Description "INFO"
     try {
         & $Action
+        Write-Log "Completed: $Description" "OK"
     }
     catch {
-        Write-Warning "Failed: $Description :: $($_.Exception.Message)"
+        Write-Log "Failed: $Description :: $($_.Exception.Message)" "ERROR"
     }
 }
 
-Write-Host "PaTech Windows cleanup baseline for patech-wsa-01" -ForegroundColor Green
-if ($WhatIfOnly) { Write-Host "Running in WhatIfOnly mode" -ForegroundColor Yellow }
+function Test-IsAdmin {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
 
-# Consumer/bloat AppX packages. Keep Microsoft Store, Terminal, Photos, Calculator, Winget/App Installer, NVIDIA/MSI driver packages.
-$AppxRemovePatterns = @(
-    "Microsoft.BingNews",
-    "Microsoft.BingWeather",
-    "Microsoft.GamingApp",
-    "Microsoft.GetHelp",
-    "Microsoft.Getstarted",
-    "Microsoft.MicrosoftOfficeHub",
-    "Microsoft.MicrosoftSolitaireCollection",
-    "Microsoft.MixedReality.Portal",
-    "Microsoft.People",
-    "Microsoft.PowerAutomateDesktop",
-    "Microsoft.Todos",
-    "Microsoft.WindowsAlarms",
-    "Microsoft.WindowsFeedbackHub",
-    "Microsoft.WindowsMaps",
-    "Microsoft.Xbox.TCUI",
-    "Microsoft.XboxApp",
-    "Microsoft.XboxGameOverlay",
-    "Microsoft.XboxGamingOverlay",
-    "Microsoft.XboxIdentityProvider",
-    "Microsoft.XboxSpeechToTextOverlay",
-    "Microsoft.YourPhone",
-    "Microsoft.ZuneMusic",
-    "Microsoft.ZuneVideo",
-    "MicrosoftTeams",
-    "Clipchamp.Clipchamp",
-    "Disney",
-    "Spotify",
-    "TikTok",
-    "Facebook",
-    "Instagram",
-    "LinkedIn"
+if (-not (Test-IsAdmin)) {
+    Write-Log "This script should be run as Administrator. Some cleanup steps will fail otherwise." "WARN"
+}
+
+Write-Log "Starting PaTech Windows bloatware cleanup for patech-wsa-01" "INFO"
+Write-Log "Log file: $LogFile" "INFO"
+Write-Log "WhatIfOnly=$WhatIfOnly; AggressiveNortonCleanup=$AggressiveNortonCleanup" "INFO"
+
+# --------------------------------------------------------------------------------------
+# 1. Kill known consumer/OEM/trialware processes
+# --------------------------------------------------------------------------------------
+
+$ProcessNamePatterns = @(
+    "Norton",
+    "N360",
+    "NortonSecurity",
+    "Symantec",
+    "McAfee",
+    "WebAdvisor",
+    "SteelSeriesGG",
+    "SteelSeries",
+    "Nahimic",
+    "Overwolf",
+    "Xbox",
+    "GameBar"
 )
 
-foreach ($pattern in $AppxRemovePatterns) {
-    Invoke-Change "Remove AppX package pattern: $pattern" {
-        Get-AppxPackage -Name "*$pattern*" -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+foreach ($pattern in $ProcessNamePatterns) {
+    $matches = Get-Process -ErrorAction SilentlyContinue | Where-Object {
+        $_.ProcessName -match $pattern -or $_.Path -match $pattern
+    }
+
+    foreach ($proc in $matches) {
+        Invoke-Step "Stop process $($proc.ProcessName) [$($proc.Id)]" {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 2. Uninstall known bloatware using winget when available
+# --------------------------------------------------------------------------------------
+
+$WingetAvailable = [bool](Get-Command winget -ErrorAction SilentlyContinue)
+
+$WingetUninstallNames = @(
+    "Norton 360 for Gamers",
+    "Norton 360",
+    "Norton Security",
+    "Norton Antivirus",
+    "Norton Private Browser",
+    "Norton Secure VPN",
+    "Norton Password Manager",
+    "Norton Utilities Ultimate",
+    "McAfee LiveSafe",
+    "McAfee Security",
+    "McAfee WebAdvisor",
+    "WildTangent Games",
+    "Spotify",
+    "Disney+",
+    "TikTok",
+    "Instagram",
+    "WhatsApp",
+    "Facebook",
+    "Messenger",
+    "LinkedIn",
+    "Clipchamp",
+    "Microsoft Teams",
+    "Xbox",
+    "Xbox Game Bar",
+    "Xbox TCUI",
+    "Xbox Identity Provider",
+    "Xbox Game Speech Window"
+)
+
+if ($WingetAvailable) {
+    foreach ($app in $WingetUninstallNames) {
+        Invoke-Step "winget uninstall '$app'" {
+            winget uninstall --name "$app" --silent --accept-source-agreements --source winget 2>$null
+        }
+    }
+}
+else {
+    Write-Log "winget not found; skipping winget uninstall section" "WARN"
+}
+
+# --------------------------------------------------------------------------------------
+# 3. Uninstall Norton/Symantec via registry uninstall entries
+# --------------------------------------------------------------------------------------
+
+$UninstallRegistryPaths = @(
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+)
+
+$NortonUninstallEntries = foreach ($path in $UninstallRegistryPaths) {
+    Get-ItemProperty $path -ErrorAction SilentlyContinue | Where-Object {
+        $_.DisplayName -match "Norton|Symantec|LifeLock|NortonLifeLock"
+    }
+}
+
+foreach ($entry in $NortonUninstallEntries) {
+    $name = $entry.DisplayName
+    $uninstall = $entry.UninstallString
+    $quiet = $entry.QuietUninstallString
+
+    if ([string]::IsNullOrWhiteSpace($uninstall) -and [string]::IsNullOrWhiteSpace($quiet)) {
+        Write-Log "No uninstall string found for $name" "WARN"
+        continue
+    }
+
+    $cmd = if (-not [string]::IsNullOrWhiteSpace($quiet)) { $quiet } else { $uninstall }
+
+    Invoke-Step "Uninstall Norton/Symantec registry entry: $name" {
+        if ($cmd -match "msiexec") {
+            $msiArgs = $cmd -replace "MsiExec.exe", "" -replace "/I", "/X" -replace "/i", "/x"
+            Start-Process -FilePath "msiexec.exe" -ArgumentList "$msiArgs /qn /norestart" -Wait -ErrorAction SilentlyContinue
+        }
+        else {
+            Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$cmd`"" -Wait -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 4. Remove AppX consumer apps for current user and provisioned packages for new users
+# --------------------------------------------------------------------------------------
+
+$AppxPatterns = @(
+    "*Clipchamp*",
+    "*MicrosoftTeams*",
+    "*Teams*",
+    "*Xbox*",
+    "*GamingApp*",
+    "*ZuneMusic*",
+    "*ZuneVideo*",
+    "*BingNews*",
+    "*BingWeather*",
+    "*GetHelp*",
+    "*Getstarted*",
+    "*MicrosoftOfficeHub*",
+    "*MicrosoftSolitaireCollection*",
+    "*People*",
+    "*Spotify*",
+    "*TikTok*",
+    "*Disney*",
+    "*Facebook*",
+    "*Instagram*",
+    "*Messenger*",
+    "*LinkedIn*"
+)
+
+foreach ($pattern in $AppxPatterns) {
+    Invoke-Step "Remove AppX packages matching $pattern for current/all users" {
+        Get-AppxPackage -AllUsers -Name $pattern -ErrorAction SilentlyContinue |
+            Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+    }
+
+    Invoke-Step "Remove provisioned AppX packages matching $pattern" {
         Get-AppxProvisionedPackage -Online |
-            Where-Object { $_.DisplayName -like "*$pattern*" } |
+            Where-Object { $_.DisplayName -like $pattern } |
             Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Out-Null
     }
 }
 
-# Disable Xbox/Game Bar capture stack.
-Invoke-Change "Disable Xbox Game Bar and game captures" {
-    New-Item -Path "HKCU:\Software\Microsoft\GameBar" -Force | Out-Null
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "ShowStartupPanel" -Type DWord -Value 0
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "UseNexusForGameBarEnabled" -Type DWord -Value 0
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Type DWord -Value 0
+# --------------------------------------------------------------------------------------
+# 5. Disable consumer UX, widgets, chat, game bar, tips
+# --------------------------------------------------------------------------------------
 
-    New-Item -Path "HKCU:\System\GameConfigStore" -Force | Out-Null
-    Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Type DWord -Value 0
+$RegistryTweaks = @(
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name="TaskbarDa"; Type="DWord"; Value=0; Description="Disable Widgets taskbar button" },
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name="TaskbarMn"; Type="DWord"; Value=0; Description="Disable Chat/Teams taskbar button" },
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR"; Name="AppCaptureEnabled"; Type="DWord"; Value=0; Description="Disable Game DVR capture" },
+    @{ Path="HKCU:\System\GameConfigStore"; Name="GameDVR_Enabled"; Type="DWord"; Value=0; Description="Disable Game DVR" },
+    @{ Path="HKCU:\Software\Microsoft\GameBar"; Name="ShowStartupPanel"; Type="DWord"; Value=0; Description="Disable Game Bar startup panel" },
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name="SubscribedContent-338388Enabled"; Type="DWord"; Value=0; Description="Disable suggested app content" },
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name="SubscribedContent-338389Enabled"; Type="DWord"; Value=0; Description="Disable Windows tips" },
+    @{ Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name="SilentInstalledAppsEnabled"; Type="DWord"; Value=0; Description="Disable silent installed suggested apps" }
+)
 
-    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Force | Out-Null
-    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -Type DWord -Value 0
-}
-
-# Taskbar noise: widgets/chat/search/coplaner-like consumer bits. Some values differ by build; harmless if ignored.
-Invoke-Change "Disable widgets/chat/search highlights on taskbar" {
-    New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Force | Out-Null
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Type DWord -Value 0
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Type DWord -Value 0
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Type DWord -Value 1 -ErrorAction SilentlyContinue
-
-    New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Force | Out-Null
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds" -Name "ShellFeedsTaskbarViewMode" -Type DWord -Value 2
-
-    New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Force | Out-Null
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Type DWord -Value 0 -ErrorAction SilentlyContinue
-}
-
-# Disable consumer content suggestions.
-Invoke-Change "Disable Windows consumer suggestions" {
-    New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Force | Out-Null
-    $values = @(
-        "ContentDeliveryAllowed",
-        "FeatureManagementEnabled",
-        "OemPreInstalledAppsEnabled",
-        "PreInstalledAppsEnabled",
-        "PreInstalledAppsEverEnabled",
-        "SilentInstalledAppsEnabled",
-        "SoftLandingEnabled",
-        "SubscribedContent-310093Enabled",
-        "SubscribedContent-338388Enabled",
-        "SubscribedContent-338389Enabled",
-        "SubscribedContent-338393Enabled",
-        "SubscribedContent-353694Enabled",
-        "SubscribedContent-353696Enabled",
-        "SystemPaneSuggestionsEnabled"
-    )
-    foreach ($v in $values) {
-        Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name $v -Type DWord -Value 0 -ErrorAction SilentlyContinue
+foreach ($tweak in $RegistryTweaks) {
+    Invoke-Step $tweak.Description {
+        New-Item -Path $tweak.Path -Force | Out-Null
+        New-ItemProperty -Path $tweak.Path -Name $tweak.Name -PropertyType $tweak.Type -Value $tweak.Value -Force | Out-Null
     }
 }
 
-# Disable selected autostarts without uninstalling vendor tooling. Keeps drivers/firmware tools installed.
-$StartupNamePatterns = "SteelSeries|GG|MSI Center|MSI Companion|Nahimic|Norton|McAfee|Xbox|Teams|OneDrive"
-Invoke-Change "List and disable noisy startup commands where possible" {
-    Write-Host "Startup entries matching: $StartupNamePatterns"
-    Get-CimInstance Win32_StartupCommand |
-        Where-Object { $_.Name -match $StartupNamePatterns -or $_.Command -match $StartupNamePatterns } |
-        Select-Object Name, Command, Location, User | Format-Table -AutoSize
+# --------------------------------------------------------------------------------------
+# 6. Disable selected startup commands
+# --------------------------------------------------------------------------------------
 
-    $runPaths = @(
-        "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run",
-        "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run",
-        "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"
-    )
+$StartupPatterns = "Norton|Symantec|LifeLock|McAfee|SteelSeries|Nahimic|Overwolf|Xbox|GameBar|Spotify|Teams"
 
-    foreach ($path in $runPaths) {
-        if (Test-Path $path) {
-            $props = Get-ItemProperty -Path $path
-            $props.PSObject.Properties |
-                Where-Object { $_.Name -notmatch "^PS" -and ($_.Name -match $StartupNamePatterns -or [string]$_.Value -match $StartupNamePatterns) } |
-                ForEach-Object {
-                    Write-Host "Removing startup value $($_.Name) from $path"
-                    Remove-ItemProperty -Path $path -Name $_.Name -ErrorAction SilentlyContinue
-                }
-        }
+$StartupCommands = Get-CimInstance Win32_StartupCommand -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Name -match $StartupPatterns -or
+        $_.Command -match $StartupPatterns -or
+        $_.Location -match $StartupPatterns
     }
+
+foreach ($startup in $StartupCommands) {
+    Write-Log "Found startup item: $($startup.Name) :: $($startup.Command)" "WARN"
 }
 
-# Disable common scheduled tasks for consumer/game/vendor overlays when present.
-$TaskPatterns = "Xbox|GameBar|MicrosoftEdgeUpdateTaskMachine|OneDrive|Teams|SteelSeries|Nahimic"
-Invoke-Change "Disable noisy scheduled tasks where present" {
-    Get-ScheduledTask |
-        Where-Object { $_.TaskName -match $TaskPatterns -or $_.TaskPath -match $TaskPatterns } |
+$RunKeys = @(
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run",
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run",
+    "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"
+)
+
+foreach ($key in $RunKeys) {
+    if (-not (Test-Path $key)) { continue }
+
+    $props = Get-ItemProperty -Path $key -ErrorAction SilentlyContinue
+    $props.PSObject.Properties |
+        Where-Object {
+            $_.Name -notmatch "^PS" -and
+            ($_.Name -match $StartupPatterns -or [string]$_.Value -match $StartupPatterns)
+        } |
         ForEach-Object {
-            Write-Host "Disabling task: $($_.TaskPath)$($_.TaskName)"
-            Disable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue | Out-Null
+            $propName = $_.Name
+            Invoke-Step "Remove startup registry item $propName from $key" {
+                Remove-ItemProperty -Path $key -Name $propName -Force -ErrorAction SilentlyContinue
+            }
         }
 }
 
-# Keyboard RGB cannot be reliably turned off by public MSI/SteelSeries CLI on all models.
-# This creates an explicit manual task marker so the setup checklist does not forget it.
-Invoke-Change "Create manual RGB follow-up marker" {
-    $markerDir = Join-Path $env:USERPROFILE "patech-setup-notes"
-    New-Item -ItemType Directory -Path $markerDir -Force | Out-Null
-    @"
-Manual check required: Keyboard RGB
+# --------------------------------------------------------------------------------------
+# 7. Stop/disable leftover Norton/Symantec/McAfee services
+# --------------------------------------------------------------------------------------
 
-Preferred setting for patech-wsa-01:
-- SteelSeries GG / MSI Center
-- Keyboard illumination: Off, or static white at low brightness
-- Disable startup/idle lighting effects
+$ServicePatterns = "Norton|Symantec|LifeLock|McAfee|WebAdvisor"
 
-Reason:
-MSI/SteelSeries RGB is commonly controlled via embedded controller/vendor app and has no stable public CLI across models.
-"@ | Set-Content -Path (Join-Path $markerDir "keyboard-rgb-manual-check.txt") -Encoding UTF8
+$Services = Get-Service -ErrorAction SilentlyContinue | Where-Object {
+    $_.Name -match $ServicePatterns -or $_.DisplayName -match $ServicePatterns
 }
 
-Write-Host "Cleanup baseline finished. Reboot recommended." -ForegroundColor Green
+foreach ($svc in $Services) {
+    Invoke-Step "Stop service $($svc.Name) / $($svc.DisplayName)" {
+        Stop-Service -Name $svc.Name -Force -ErrorAction SilentlyContinue
+    }
+
+    Invoke-Step "Disable service $($svc.Name) / $($svc.DisplayName)" {
+        Set-Service -Name $svc.Name -StartupType Disabled -ErrorAction SilentlyContinue
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 8. Disable selected scheduled tasks
+# --------------------------------------------------------------------------------------
+
+$TaskPatterns = "Norton|Symantec|LifeLock|McAfee|WebAdvisor|Xbox|GameBar|Spotify|Teams|Adobe.*Update"
+
+$Tasks = Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object {
+    $_.TaskName -match $TaskPatterns -or
+    $_.TaskPath -match $TaskPatterns
+}
+
+foreach ($task in $Tasks) {
+    Invoke-Step "Disable scheduled task $($task.TaskPath)$($task.TaskName)" {
+        Disable-ScheduledTask -TaskName $task.TaskName -TaskPath $task.TaskPath -ErrorAction SilentlyContinue | Out-Null
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 9. Aggressive Norton/Symantec folder cleanup
+# --------------------------------------------------------------------------------------
+
+$NortonPaths = @(
+    "$env:ProgramFiles\Norton",
+    "$env:ProgramFiles\Norton 360",
+    "$env:ProgramFiles\Norton Security",
+    "$env:ProgramFiles\NortonInstaller",
+    "$env:ProgramFiles\Symantec",
+    "${env:ProgramFiles(x86)}\Norton",
+    "${env:ProgramFiles(x86)}\Norton 360",
+    "${env:ProgramFiles(x86)}\Norton Security",
+    "${env:ProgramFiles(x86)}\NortonInstaller",
+    "${env:ProgramFiles(x86)}\Symantec",
+    "$env:ProgramData\Norton",
+    "$env:ProgramData\NortonInstaller",
+    "$env:ProgramData\Symantec",
+    "$env:ProgramData\NortonLifeLock",
+    "$env:LocalAppData\Norton",
+    "$env:AppData\Norton",
+    "$env:LocalAppData\Symantec",
+    "$env:AppData\Symantec"
+)
+
+if ($AggressiveNortonCleanup) {
+    foreach ($path in $NortonPaths) {
+        if (Test-Path $path) {
+            Invoke-Step "Remove leftover Norton/Symantec folder: $path" {
+                Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+}
+else {
+    foreach ($path in $NortonPaths) {
+        if (Test-Path $path) {
+            Write-Log "Leftover Norton/Symantec path found. Re-run with -AggressiveNortonCleanup to remove: $path" "WARN"
+        }
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 10. Temp cleanup
+# --------------------------------------------------------------------------------------
+
+$TempPaths = @(
+    "$env:TEMP\*",
+    "$env:WINDIR\Temp\*"
+)
+
+foreach ($path in $TempPaths) {
+    Invoke-Step "Clean temp path $path" {
+        Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# --------------------------------------------------------------------------------------
+# 11. Restart Explorer to apply taskbar/user shell tweaks
+# --------------------------------------------------------------------------------------
+
+Invoke-Step "Restart Explorer shell" {
+    Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+    Start-Process explorer.exe
+}
+
+# --------------------------------------------------------------------------------------
+# 12. Summary
+# --------------------------------------------------------------------------------------
+
+Write-Log "Cleanup completed." "OK"
+Write-Log "Recommended next step: reboot Windows." "INFO"
+Write-Log "Recommended after reboot: run scripts/windows/99-verify-windows.ps1" "INFO"
+Write-Log "If Norton still appears in Apps, use vendor removal tool manually as fallback." "WARN"
