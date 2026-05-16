@@ -18,10 +18,25 @@ echo "== Dev tools =="
 git --version
 python3 --version
 node --version || true
-uv --version || true
+# uv
+if command -v uv >/dev/null 2>&1; then
+  uv --version
+elif [ -x "$HOME/.local/bin/uv" ]; then
+  "$HOME/.local/bin/uv" --version
+else
+  echo "WARN: uv not found"
+fi
 
 echo "== Ollama =="
-ollama list || true
+# Ollama
+if command -v ollama >/dev/null 2>&1; then
+  ollama --version
+  ollama list || true
+elif curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
+  echo "Ollama API reachable via Windows host at localhost:11434"
+else
+  echo "WARN: ollama not found and API not reachable"
+fi
 
 echo "== Hermes config =="
 test -f "$HOME/.hermes/config.yaml" && echo "Hermes config present" || echo "Hermes config missing"
