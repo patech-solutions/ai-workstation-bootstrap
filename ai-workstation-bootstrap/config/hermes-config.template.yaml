@@ -1,0 +1,32 @@
+# Hermes Agent template voor patech-wsa-01
+# Vul secrets nooit in deze repo in. Gebruik environment variables of lokale secret store.
+
+workstation:
+  name: patech-wsa-01
+  wsl_name: patech-wsa-01-wsl
+
+providers:
+  openrouter:
+    enabled: true
+    api_key_env: OPENROUTER_API_KEY
+  openai_oauth:
+    enabled: true
+  anthropic:
+    enabled: true
+    api_key_env: ANTHROPIC_API_KEY
+
+profiles:
+  fast:
+    model: qwen/qwen3.6-flash
+  code:
+    model: qwen/qwen3.6-plus
+  reason:
+    model: deepseek/deepseek-r1
+  write:
+    model: qwen/qwen3.6-plus
+  premium:
+    model: claude-sonnet-4-6
+
+memory:
+  provider: honcho
+  endpoint: http://localhost:8000
