@@ -1,24 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Hostname =="
-hostname
+echo "== WSL verification =="
 
+echo
 echo "== OS =="
 lsb_release -a || cat /etc/os-release
 
-echo "== GPU =="
-nvidia-smi || echo "No NVIDIA visible in WSL"
+echo
+echo "== Hostname =="
+hostname
 
-echo "== Docker =="
-docker version || true
-docker compose version || true
-
-echo "== Dev tools =="
+echo
+echo "== Git =="
 git --version
+
+echo
+echo "== Python =="
 python3 --version
-node --version || true
-# uv
+
+echo
+echo "== uv =="
 if command -v uv >/dev/null 2>&1; then
   uv --version
 elif [ -x "$HOME/.local/bin/uv" ]; then
@@ -27,19 +29,41 @@ else
   echo "WARN: uv not found"
 fi
 
-echo "== Ollama =="
-# Ollama
+echo
+echo "== Node/npm =="
+node --version || echo "WARN: node not found"
+npm --version || echo "WARN: npm not found"
+
+echo
+echo "== Docker =="
+docker version || echo "WARN: docker not available from WSL"
+docker compose version || echo "WARN: docker compose not available from WSL"
+
+echo
+echo "== NVIDIA =="
+nvidia-smi || echo "WARN: NVIDIA not visible from WSL"
+
+echo
+echo "== zstd =="
+zstd --version || echo "WARN: zstd not found"
+
+echo
+echo "== Ollama WSL-native =="
 if command -v ollama >/dev/null 2>&1; then
   ollama --version
-  ollama list || true
-elif curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
-  echo "Ollama API reachable via Windows host at localhost:11434"
 else
-  echo "WARN: ollama not found and API not reachable"
+  echo "ERROR: ollama command not found in WSL"
+  exit 1
 fi
 
-echo "== Hermes config =="
-test -f "$HOME/.hermes/config.yaml" && echo "Hermes config present" || echo "Hermes config missing"
+if curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1; then
+  echo "OK: Ollama API reachable at http://localhost:11434"
+  ollama list
+else
+  echo "ERROR: Ollama API not reachable at http://localhost:11434"
+  echo "Try: ollama serve"
+  exit 1
+fi
 
-echo "== Honcho config =="
-test -f "$HOME/.honcho/config.yaml" && echo "Honcho config present" || echo "Honcho config missing"
+echo
+echo "Verification complete."

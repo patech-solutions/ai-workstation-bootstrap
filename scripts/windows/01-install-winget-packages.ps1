@@ -1,17 +1,24 @@
+[CmdletBinding()]
+param()
+
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path))
-$packageFile = Join-Path $repoRoot "config\winget-packages.txt"
+# Ollama is intentionally NOT installed on Windows.
+# Ollama runs native inside WSL to avoid Windows/WSL NAT and localhost forwarding issues.
 
-if (!(Test-Path $packageFile)) {
-    throw "Package file not found: $packageFile"
-}
-
-$packages = Get-Content $packageFile | Where-Object { $_ -and -not $_.StartsWith("#") }
+$packages = @(
+    "Git.Git",
+    "Microsoft.VisualStudioCode",
+    "Docker.DockerDesktop",
+    "Microsoft.PowerShell",
+    "OpenJS.NodeJS.LTS",
+    "Python.Python.3.12",
+    "7zip.7zip",
+    "Notepad++.Notepad++",
+    "WinSCP.WinSCP"
+)
 
 foreach ($pkg in $packages) {
-    Write-Host "Installing $pkg..."
+    Write-Host "Installing $pkg"
     winget install --id $pkg --exact --source winget --accept-package-agreements --accept-source-agreements
 }
-
-Write-Host "Winget package installation complete."

@@ -1,34 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo "== PaTech WSL bootstrap: base Ubuntu packages =="
+
 sudo apt update
 sudo apt upgrade -y
 
 sudo apt install -y \
   build-essential \
+  ca-certificates \
   curl \
   wget \
   git \
   jq \
   unzip \
-  ca-certificates \
+  zip \
+  tar \
+  zstd \
   gnupg \
   lsb-release \
+  software-properties-common \
+  apt-transport-https \
   htop \
   btop \
-  nvtop \
   tmux \
   direnv \
   ripgrep \
   fd-find \
   fzf \
   tree \
-  shellcheck
+  shellcheck \
+  netcat-openbsd
 
-sudo hostnamectl set-hostname patech-wsa-01-wsl || true
+git config --global core.autocrlf false
+git config --global core.eol lf
 
-git config --global user.name "Pascal van de Bor"
-git config --global user.email "vandeborp@gmail.com"
-git config --global init.defaultBranch main
-
-echo "WSL bootstrap complete for patech-wsa-01-wsl."
+echo "== Base Ubuntu bootstrap complete =="

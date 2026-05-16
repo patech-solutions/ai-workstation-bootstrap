@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
+
+echo "== PaTech WSL bootstrap: dev tools =="
 
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# NodeJS LTS via NodeSource - more bootstrap-safe than nvm
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+export PATH="$HOME/.local/bin:$PATH"
 
-sudo apt install -y nodejs
+if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.bashrc"; then
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+fi
+
+uv --version
+
+if ! command -v node >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  sudo apt install -y nodejs
+fi
 
 node --version
 npm --version
 
-if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
-  ssh-keygen -t ed25519 -C "pascal@patech-wsa-01" -f "$HOME/.ssh/id_ed25519" -N ""
-fi
-
-echo "Public SSH key:"
-cat "$HOME/.ssh/id_ed25519.pub"
+echo "== Dev tools bootstrap complete =="

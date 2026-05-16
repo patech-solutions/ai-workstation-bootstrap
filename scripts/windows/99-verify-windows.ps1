@@ -1,14 +1,28 @@
-Write-Host "== Hostname =="
+[CmdletBinding()]
+param()
+
+Write-Host "== Windows verification =="
+
+Write-Host "`n== Computer name =="
 $env:COMPUTERNAME
 
-Write-Host "== WSL =="
+Write-Host "`n== WSL =="
 wsl --list --verbose
 
-Write-Host "== Docker =="
+Write-Host "`n== Docker =="
 docker version
 
-Write-Host "== NVIDIA =="
+Write-Host "`n== NVIDIA =="
 nvidia-smi
 
-Write-Host "== Ollama =="
-ollama --version
+Write-Host "`n== Git =="
+git --version
+
+Write-Host "`n== Ollama Windows check =="
+if (Get-Command ollama -ErrorAction SilentlyContinue) {
+    Write-Warning "Ollama is installed on Windows. Current baseline expects Ollama native in WSL."
+    ollama --version
+}
+else {
+    Write-Host "OK: Ollama not installed on Windows. Expected: WSL-native Ollama."
+}
