@@ -13,17 +13,8 @@ chmod +x scripts/wsl/*.sh
 ./scripts/wsl/01-dev-tools.sh
 ./scripts/wsl/02-install-ollama.sh
 ./scripts/wsl/03-models-ollama.sh
-
-if [ -x scripts/wsl/04-ai-cli-tools.sh ]; then
-  ./scripts/wsl/04-ai-cli-tools.sh
-fi
-
-if [ -x scripts/wsl/05-hermes-honcho-placeholders.sh ]; then
-  ./scripts/wsl/05-hermes-honcho-placeholders.sh
-fi
-
-if [ -x scripts/wsl/06-open-webui.sh ]; then
-  ./scripts/wsl/06-open-webui.sh || true
-fi
+./scripts/wsl/04-hermes-agent.sh
+./scripts/wsl/05-honcho.sh
+./scripts/wsl/06-open-webui.sh
 
 echo "WSL bootstrap complete."
