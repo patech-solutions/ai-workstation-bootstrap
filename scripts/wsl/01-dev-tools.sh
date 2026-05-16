@@ -5,26 +5,10 @@ if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-if [ ! -d "$HOME/.nvm" ]; then
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-fi
+# NodeJS LTS via NodeSource - more bootstrap-safe than nvm
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 
-# Node via nvm
-export NVM_DIR="$HOME/.nvm"
-
-if [ ! -d "$NVM_DIR" ]; then
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-fi
-
-# nvm.sh is not fully nounset-safe, so temporarily disable -u
-set +u
-# shellcheck disable=SC1091
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-set -u
-
-nvm install --lts
-nvm use --lts
-nvm alias default 'lts/*'
+sudo apt install -y nodejs
 
 node --version
 npm --version
