@@ -1,6 +1,5 @@
-# Basis local AI stack
+# Pas modelnamen aan op basis van beschikbaarheid in Ollama.
 qwen3:8b
 qwen3:14b
 mistral-small:latest
-devstral:latest
 nomic-embed-text:latest

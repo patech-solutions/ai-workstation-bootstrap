@@ -1,9 +1,0 @@
-services:
-  litellm:
-    image: ghcr.io/berriai/litellm:main-latest
-    container_name: litellm
-    ports:
-      - "4000:4000"
-    environment:
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-change-me-local-only}
-    restart: unless-stopped

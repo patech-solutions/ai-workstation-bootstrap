@@ -1,4 +1,5 @@
-$ErrorActionPreference = "Continue"
+Write-Host "== Hostname =="
+$env:COMPUTERNAME
 
 Write-Host "== WSL =="
 wsl --list --verbose
@@ -11,6 +12,3 @@ nvidia-smi
 
 Write-Host "== Ollama =="
 ollama --version
-
-Write-Host "== Git =="
-git --version

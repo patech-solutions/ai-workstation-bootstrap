@@ -23,12 +23,12 @@ sudo apt install -y \
   fd-find \
   fzf \
   tree \
-  shellcheck \
-  software-properties-common
+  shellcheck
+
+sudo hostnamectl set-hostname patech-wsa-01-wsl || true
 
 git config --global user.name "Pascal van de Bor"
 git config --global user.email "vandeborp@gmail.com"
 git config --global init.defaultBranch main
-git config --global core.autocrlf input
 
-echo "Ubuntu bootstrap complete."
+echo "WSL bootstrap complete for patech-wsa-01-wsl."
