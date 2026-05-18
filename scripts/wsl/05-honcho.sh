@@ -22,7 +22,7 @@ if [ ! -f .env ] && [ -f .env.template ]; then
   cp .env.template .env
 fi
 
-docker compose up -d
+# docker compose up -d
 
 cat <<'MSG'
 Honcho local/self-hosted started.
