@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# PaTech AI Workstation - Firecrawl self-hosted bootstrap
+# Target: WSL2 Ubuntu on patech-wsa-01
+#
+# Purpose:
+# - Install/update self-hosted Firecrawl locally using Docker Compose.
+# - Keep it local-first for Hermes Agent usage.
+# - Do not make Firecrawl part of mandatory base bootstrap.
+#
+# Expected endpoint:
+#   http://localhost:3002
+
+FIRECRAWL_ROOT="${FIRECRAWL_ROOT:-$HOME/.local/share/patech/firecrawl}"
+FIRECRAWL_REPO="${FIRECRAWL_REPO:-https://github.com/firecrawl/firecrawl.git}"
+FIRECRAWL_PORT="${FIRECRAWL_PORT:-3002}"
+
+echo "== PaTech Firecrawl self-hosted bootstrap =="
+echo "Firecrawl root : $FIRECRAWL_ROOT"
+echo "Firecrawl repo : $FIRECRAWL_REPO"
+echo "Firecrawl port : $FIRECRAWL_PORT"
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "ERROR: git not found. Run 00/01 bootstrap first."
+  exit 1
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "ERROR: docker not found in WSL."
+  echo "Enable Docker Desktop WSL integration, or install Docker Engine in WSL."
+  exit 1
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  echo "ERROR: docker compose not available."
+  exit 1
+fi
+
+mkdir -p "$(dirname "$FIRECRAWL_ROOT")"
+
+if [ ! -d "$FIRECRAWL_ROOT/.git" ]; then
+  echo "Cloning Firecrawl..."
+  git clone "$FIRECRAWL_REPO" "$FIRECRAWL_ROOT"
+else
+  echo "Updating Firecrawl repository..."
+  git -C "$FIRECRAWL_ROOT" pull --ff-only || {
+    echo "WARN: git pull failed. Existing checkout kept."
+  }
+fi
+
+cd "$FIRECRAWL_ROOT"
+
+if [ ! -f "docker-compose.yaml" ] && [ ! -f "docker-compose.yml" ]; then
+  echo "ERROR: No docker-compose.yaml/yml found in $FIRECRAWL_ROOT"
+  exit 1
+fi
+
+COMPOSE_FILE="docker-compose.yaml"
+if [ ! -f "$COMPOSE_FILE" ]; then
+  COMPOSE_FILE="docker-compose.yml"
+fi
+
+if [ ! -f ".env" ]; then
+  if [ -f "apps/api/.env.example" ]; then
+    echo "Creating .env from apps/api/.env.example"
+    cp "apps/api/.env.example" ".env"
+  else
+    echo "Creating minimal .env"
+    cat > ".env" <<EOF
+NUM_WORKERS_PER_QUEUE=8
+PORT=${FIRECRAWL_PORT}
+HOST=0.0.0.0
+REDIS_URL=redis://redis:6379
+REDIS_RATE_LIMIT_URL=redis://redis:6379
+BULL_AUTH_KEY=@
+EOF
+  fi
+fi
+
+touch ".env"
+
+set_env_value() {
+  local key="$1"
+  local value="$2"
+
+  if grep -q "^${key}=" ".env"; then
+    sed -i "s|^${key}=.*|${key}=${value}|g" ".env"
+  else
+    echo "${key}=${value}" >> ".env"
+  fi
+}
+
+set_env_value "PORT" "$FIRECRAWL_PORT"
+set_env_value "HOST" "0.0.0.0"
+set_env_value "REDIS_URL" "redis://redis:6379"
+set_env_value "REDIS_RATE_LIMIT_URL" "redis://redis:6379"
+set_env_value "BULL_AUTH_KEY" "@"
+
+echo "Building and starting Firecrawl. This can take a while on first run..."
+docker compose -f "$COMPOSE_FILE" up -d --build
+
+echo "Waiting for Firecrawl API on http://localhost:${FIRECRAWL_PORT} ..."
+for i in {1..60}; do
+  if curl -fsS "http://localhost:${FIRECRAWL_PORT}" >/dev/null 2>&1; then
+    echo "OK: Firecrawl reachable at http://localhost:${FIRECRAWL_PORT}"
+    break
+  fi
+
+  if [ "$i" -eq 60 ]; then
+    echo "WARN: Firecrawl did not respond on / within timeout."
+    echo "Check logs:"
+    echo "  cd $FIRECRAWL_ROOT"
+    echo "  docker compose -f $COMPOSE_FILE logs -f"
+  fi
+
+  sleep 2
+done
+
+cat <<EOF
+
+Firecrawl bootstrap complete.
+
+Local endpoint:
+  http://localhost:${FIRECRAWL_PORT}
+
+Queue UI, if enabled by the current Firecrawl build:
+  http://localhost:${FIRECRAWL_PORT}/admin/@/queues
+
+Hermes Agent integration:
+  Use Firecrawl/self-hosted web tool endpoint:
+  http://localhost:${FIRECRAWL_PORT}
+
+Useful checks:
+  cd "$FIRECRAWL_ROOT"
+  docker compose -f "$COMPOSE_FILE" ps
+  docker compose -f "$COMPOSE_FILE" logs -f
+
+EOF
