@@ -1,5 +1,5 @@
 qwen3:8b
 qwen3:14b
-mistral-small:latest
-devstral:latest
+gemm4:e4b
+llama3.1:8b
 nomic-embed-text:latest
