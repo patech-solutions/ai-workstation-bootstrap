@@ -10,3 +10,4 @@ Notepad++.Notepad++
 WinSCP.WinSCP
 PuTTY.PuTTY
 Ollama.Ollama
+Obsidian.Obsidian
