@@ -54,8 +54,25 @@ Pascals taakmanager. Gebruik altijd het helper script — nooit de API direct (A
 Projecten: id=1 Inbox, id=7 Ondernemen, id=10 Workflow/infrastructuur, id=11 Infrastructuur Roadmap, id=12 Product Ideeën.
 
 ## Obsidian werkruimte
-De primaire werkruimte is de Obsidian vault op `/mnt/c/Users/Pascal/PaTech/AI-Workspace`. Dit is ook de standaard werkmap (terminal.cwd). Volledige werkregels staan in `/mnt/c/Users/Pascal/PaTech/AI-Workspace/.hermes.md` — lees dit bij werkruimte-gerelateerde taken.
-Kort: AI-output gaat naar `00-inbox/`, nooit bestanden verwijderen of overschrijven, gebruik templates uit `05-templates/`.
+De primaire werkruimte is de Obsidian vault op `/mnt/c/Users/Pascal/PaTech/AI-Workspace`. Dit is ook de standaard werkmap (terminal.cwd).
+
+Mappen en toegang:
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/00-inbox/` — schrijven (alle AI-output en drafts)
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/01-clients/` — lezen
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/02-projects/` — lezen
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/03-architecture/` — lezen
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/04-research/` — lezen
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/05-templates/` — lezen (gebruik bij nieuwe documenten)
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/06-ai-memory/` — schrijven
+- `/mnt/c/Users/Pascal/PaTech/AI-Workspace/08-playbooks/` — lezen
+- `.obsidian/`, `.git/`, `.secrets/`, `.private/` — NOOIT aanraken
+
+Werkregels:
+- Schrijf AI-output ALTIJD naar `00-inbox/` — nooit direct naar andere mappen
+- Nooit bestanden verwijderen of overschrijven
+- Gebruik altijd een template uit `05-templates/` bij het aanmaken van nieuwe documenten
+
+Workflow: lees relevante project- of klantnotities → lees het passende template → maak draft in `00-inbox/` → Pascal beoordeelt en promoot naar de permanente map.
 
 ## Wat je weet over het systeem
 - Gateway: `hermes-gateway.service` (systemd user service)
