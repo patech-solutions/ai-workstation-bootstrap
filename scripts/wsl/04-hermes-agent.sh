@@ -1,18 +1,107 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Install Hermes Agent =="
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CONFIG_DIR="$REPO_ROOT/config/hermes"
 
+echo "== Hermes Agent installeren =="
+
+# Installeer Hermes
 curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 
-mkdir -p "$HOME/.hermes/profiles"
+# faster-whisper voor lokale STT
+echo "-- faster-whisper installeren --"
+uv pip install faster-whisper --python "$HOME/.hermes/hermes-agent/venv/bin/python"
+
+# Context length cache (Hermes vereist >=64K, Ollama rapporteert 40960)
+echo "-- context_length_cache.yaml instellen --"
+cat > "$HOME/.hermes/context_length_cache.yaml" <<'EOF'
+context_lengths:
+  qwen3-30b:iq2xxs@http://localhost:11434/v1: 131072
+  qwen3-30b:iq2xxs@http://localhost:11434/v1/: 131072
+  qwen3:14b@http://localhost:11434/v1: 131072
+  qwen3:14b@http://localhost:11434/v1/: 131072
+  gemma4:e4b@http://localhost:11434/v1: 131072
+  gemma4:e4b@http://localhost:11434/v1/: 131072
+  qwen3:8b@http://localhost:11434/v1: 131072
+  qwen3:8b@http://localhost:11434/v1/: 131072
+  llama3.1:8b@http://localhost:11434/v1: 131072
+  llama3.1:8b@http://localhost:11434/v1/: 131072
+  phi4:14b@http://localhost:11434/v1: 131072
+  phi4:14b@http://localhost:11434/v1/: 131072
+  aya-expanse:8b@http://localhost:11434/v1: 131072
+  aya-expanse:8b@http://localhost:11434/v1/: 131072
+EOF
+
+# SOUL.md — altijd vanuit repo installeren (is configuratie, geen data)
+# Bestaande versie wordt gebackupt zodat niets verloren gaat
+echo "-- SOUL.md installeren --"
+SOUL_DST="$HOME/.hermes/SOUL.md"
+if [[ -f "$SOUL_DST" ]]; then
+    BACKUP="${SOUL_DST}.bak.$(date +%Y%m%d_%H%M%S)"
+    cp "$SOUL_DST" "$BACKUP"
+    echo "   bestaande SOUL.md gebackupt naar: $BACKUP"
+fi
+cp "$CONFIG_DIR/SOUL.md" "$SOUL_DST"
+echo "   SOUL.md geïnstalleerd"
+
+# MEMORY.md en USER.md — alleen installeren bij frisse installatie (zijn data, groeien over tijd)
+echo "-- basis geheugen installeren --"
+mkdir -p "$HOME/.hermes/memories"
+
+MEMORY_DST="$HOME/.hermes/memories/MEMORY.md"
+if [[ ! -f "$MEMORY_DST" ]]; then
+    cp "$CONFIG_DIR/MEMORY.md" "$MEMORY_DST"
+    echo "   MEMORY.md geïnstalleerd"
+else
+    echo "   MEMORY.md bestaat al — overgeslagen (gebruik --reset-memory om te overschrijven)"
+fi
+
+USER_DST="$HOME/.hermes/memories/USER.md"
+if [[ ! -f "$USER_DST" ]]; then
+    cp "$CONFIG_DIR/USER.md" "$USER_DST"
+    echo "   USER.md geïnstalleerd"
+else
+    echo "   USER.md bestaat al — overgeslagen"
+fi
+
+# --reset-memory flag: overschrijf geheugenbestanden ook (met backup)
+if [[ "${1:-}" == "--reset-memory" ]]; then
+    echo "-- geheugen resetten (--reset-memory) --"
+    for f in MEMORY.md USER.md; do
+        DST="$HOME/.hermes/memories/$f"
+        if [[ -f "$DST" ]]; then
+            cp "$DST" "${DST}.bak.$(date +%Y%m%d_%H%M%S)"
+        fi
+        cp "$CONFIG_DIR/$f" "$DST"
+        echo "   $f hersteld vanuit repo"
+    done
+fi
 
 cat <<'MSG'
-Hermes Agent installed.
 
-Next:
-- Start Hermes with: hermes
-- Configure provider as OpenAI-compatible/Ollama:
-  Base URL: http://localhost:11434/v1
-  Model: qwen3:14b
+== Hermes Agent geïnstalleerd ==
+
+Nog handmatig uitvoeren (vereist interactieve terminal):
+
+  hermes setup
+    → Kies: Matrix als platform
+    → Kies: custom provider (Ollama)
+    → Base URL: http://localhost:11434/v1
+    → Default model: qwen3-30b:iq2xxs
+
+  hermes memory setup
+    → Kies: honcho
+    → Base URL: http://localhost:8000
+    → Workspace: patech-wsa-01
+    → User peer: pascal / AI peer: atlas
+
+Na setup:
+  systemctl --user enable hermes-gateway.service
+  systemctl --user start hermes-gateway.service
+
+SOUL.md herstellen na hermes setup:
+  cp ~/ai-workstation-bootstrap/config/hermes/SOUL.md ~/.hermes/SOUL.md
+  (of opnieuw dit script draaien)
 MSG

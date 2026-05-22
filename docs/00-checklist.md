@@ -36,7 +36,8 @@
 - [ ] Ollama bereikbaar
 - [ ] Open WebUI starten
 - [ ] Modellen pullen
-- [ ] Hermes Agent configureren
+- [ ] Hermes Agent installeren (`04-hermes-agent.sh` — installeert ook SOUL.md + basis geheugen)
+- [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief)
 - [ ] Honcho configureren
 - [ ] Codex CLI installeren
 - [ ] Claude CLI installeren
