@@ -4,28 +4,48 @@
 
 1. Windows 11 host
 2. WSL2 Ubuntu werklaag
-3. Docker Desktop met WSL2-integratie
-4. Ollama voor lokale modellen
-5. Open WebUI voor lokale browserinterface
-6. Hermes Agent voor agentische workflows
-7. Honcho voor lokale memory
-8. Codex en Claude CLI voor coding assistants
+3. Native docker-ce in WSL2 (niet Docker Desktop)
+4. Ollama voor lokale modellen (native in WSL2, luistert op `0.0.0.0:11434`)
+5. Honcho voor lokale memory (Docker, bereikt Ollama via `host.docker.internal`)
+6. Open WebUI voor lokale browserinterface (Docker, bereikt Ollama via `host.docker.internal`)
+7. Firecrawl voor web extractie (Docker)
+8. Hermes Agent voor agentische workflows (systemd user service)
+
+## Waarom native docker-ce en niet Docker Desktop
+
+Docker Desktop draait containers in een eigen geïsoleerde VM. Containers in die VM
+kunnen Ollama in WSL2 niet bereiken via `host.docker.internal` zonder een
+Windows-zijdige poortproxy (`netsh interface portproxy`). Dit geeft problemen voor
+Honcho (dialectic timeout) en elke andere container die Ollama nodig heeft.
+
+Native docker-ce in WSL2 draait containers in dezelfde network namespace als Ollama.
+Via het `docker0` bridge-interface (`172.17.0.1`) kunnen containers direct verbinden.
+`host-gateway` in `extra_hosts` resolvet naar `172.17.0.1`, wat Ollama bereikt op
+`0.0.0.0:11434`.
 
 ## Open WebUI starten
 
 ```bash
-docker compose -f compose/open-webui.compose.yml up -d
+./scripts/wsl/06-open-webui.sh
 ```
 
-Daarna openen:
+Bereikbaar op: `http://localhost:3000`
 
-```text
-http://localhost:3000
+Ollama wordt automatisch ontdekt via `host.docker.internal:11434`.
+
+## Honcho starten
+
+```bash
+./scripts/wsl/05-honcho.sh
 ```
+
+Bereikbaar op: `http://localhost:8000`
+
+Na installatie: `hermes memory setup` → kies Lokaal → `http://localhost:8000`
 
 ## LiteLLM optioneel
 
-LiteLLM kan later worden gebruikt als router/proxy tussen lokale modellen, OpenRouter, OpenAI en Anthropic.
+LiteLLM kan worden gebruikt als router/proxy tussen lokale modellen en cloud providers.
 
 ```bash
 docker compose -f compose/litellm.compose.yml up -d

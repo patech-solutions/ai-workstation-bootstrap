@@ -10,6 +10,8 @@ mkdir -p "$BASE_DIR"
 
 if [ ! -d "$HONCHO_DIR/.git" ]; then
   git clone https://github.com/plastic-labs/honcho.git "$HONCHO_DIR"
+else
+  git -C "$HONCHO_DIR" pull --ff-only
 fi
 
 cd "$HONCHO_DIR"
@@ -18,20 +20,61 @@ if [ ! -f docker-compose.yml ] && [ -f docker-compose.yml.example ]; then
   cp docker-compose.yml.example docker-compose.yml
 fi
 
+# .env configureren voor lokale Ollama via native Docker bridge (host-gateway = 172.17.0.1)
+# host.docker.internal wordt via extra_hosts in docker-compose.yml gezet op host-gateway.
+# OLLAMA_HOST=0.0.0.0 in ollama keepalive.conf is vereist zodat dit werkt.
 if [ ! -f .env ] && [ -f .env.template ]; then
   cp .env.template .env
 fi
 
-# docker compose up -d
+# Idempotent: stel variabelen in via sed (overschrijf alleen de regel, voeg toe als afwezig)
+set_env() {
+  local key="$1" value="$2" file=".env"
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "$file"
+  else
+    echo "${key}=${value}" >> "$file"
+  fi
+}
 
-cat <<'MSG'
-Honcho local/self-hosted started.
+# LLM provider: Ollama via OpenAI-compatible API
+set_env LLM_OPENAI_API_KEY "ollama"
 
-Expected endpoint:
-  http://localhost:8000
+# Embeddings uitgeschakeld (geen lokaal embedding model)
+set_env EMBED_MESSAGES "false"
 
-Set for local tooling:
-  export HONCHO_URL=http://localhost:8000
+# Deriver — achtergrondverwerking van geheugen (licht model)
+set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
+set_env DERIVER_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
+set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
 
-Add this to ~/.bashrc if desired.
-MSG
+# Summary
+set_env SUMMARY_MODEL_CONFIG__TRANSPORT "openai"
+set_env SUMMARY_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env SUMMARY_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
+
+# Dream — geheugenconsolidatie op de achtergrond
+set_env DREAM_DEDUCTION_MODEL_CONFIG__TRANSPORT "openai"
+set_env DREAM_DEDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DREAM_DEDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
+set_env DREAM_INDUCTION_MODEL_CONFIG__TRANSPORT "openai"
+set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DREAM_INDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
+
+# Dialectic — zelfde model als Hermes zodat het warm blijft in VRAM
+for level in minimal low medium high max; do
+  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__TRANSPORT" "openai"
+  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "qwen3-30b:iq2xxs"
+  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__OVERRIDES__BASE_URL" "http://host.docker.internal:11434/v1"
+done
+
+# Vector store
+set_env VECTOR_STORE_TYPE "pgvector"
+set_env VECTOR_STORE_MIGRATED "false"
+
+docker compose up -d --build
+
+echo ""
+echo "Honcho gestart op http://localhost:8000"
+echo "Stel in Hermes in via: hermes memory setup → Lokaal → http://localhost:8000"

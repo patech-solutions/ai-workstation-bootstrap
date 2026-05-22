@@ -1,5 +1,17 @@
-qwen3:8b
+# PaTech AI Workstation — Ollama modellen
+# Volgorde: standaardmodel eerst (grootste prioriteit voor VRAM-warmte)
+
+# Primair model — altijd warm in VRAM (~10GB, IQ2 quantisatie)
+qwen3-30b:iq2xxs
+
+# Achtergrondverwerking (Honcho deriver/summary/dream) + fallback
 qwen3:14b
-gemm4:e4b
+
+# Vision / afbeeldingsanalyse
+gemma4:e4b
+
+# Lichtgewicht optie
+qwen3:8b
+
+# Backup generatiemodel
 llama3.1:8b
-nomic-embed-text:latest

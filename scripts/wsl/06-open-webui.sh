@@ -1,22 +1,29 @@
-cat > scripts/wsl/06-open-webui.sh <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
 echo "== Start Open WebUI =="
 
 if ! command -v docker >/dev/null 2>&1; then
-  echo "WARN: docker not found in WSL. Enable Docker Desktop WSL integration first."
-  exit 0
+  echo "FOUT: docker niet gevonden. Voer eerst 01-dev-tools.sh uit."
+  exit 1
 fi
 
-if [ ! -f compose/open-webui.compose.yml ]; then
-  echo "WARN: compose/open-webui.compose.yml not found. Skipping Open WebUI."
-  exit 0
+# Verwijder oude container als die bestaat (idempotent)
+if docker ps -a --format '{{.Names}}' | grep -q '^open-webui$'; then
+  echo "INFO: bestaande open-webui container gevonden — verwijderen voor herinstallatie."
+  docker rm -f open-webui
 fi
 
-docker compose -f compose/open-webui.compose.yml up -d
+# Open WebUI als standalone container
+# --add-host=host.docker.internal:host-gateway zorgt dat de container Ollama
+# kan bereiken op 172.17.0.1:11434 (native Docker bridge naar WSL2 host)
+docker run -d \
+  --name open-webui \
+  --add-host=host.docker.internal:host-gateway \
+  -p 3000:8080 \
+  -v open-webui:/app/backend/data \
+  --restart always \
+  ghcr.io/open-webui/open-webui:main
 
-echo "Open WebUI started."
-EOF
-
-chmod +x scripts/wsl/06-open-webui.sh
+echo "Open WebUI gestart op http://localhost:3000"
+echo "Ollama wordt automatisch ontdekt via host.docker.internal:11434"

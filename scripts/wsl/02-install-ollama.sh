@@ -13,6 +13,15 @@ if ! command -v ollama >/dev/null 2>&1; then
 fi
 
 if systemctl list-unit-files 2>/dev/null | grep -q '^ollama.service'; then
+  # OLLAMA_KEEP_ALIVE=-1 : model blijft altijd geladen in VRAM
+  # OLLAMA_HOST=0.0.0.0  : luistert op alle interfaces zodat Docker containers kunnen verbinden
+  sudo mkdir -p /etc/systemd/system/ollama.service.d
+  sudo tee /etc/systemd/system/ollama.service.d/keepalive.conf > /dev/null <<'EOF'
+[Service]
+Environment="OLLAMA_KEEP_ALIVE=-1"
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+EOF
+  sudo systemctl daemon-reload
   sudo systemctl enable ollama || true
   sudo systemctl start ollama || true
 fi

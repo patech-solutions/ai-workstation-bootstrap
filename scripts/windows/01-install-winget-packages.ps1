@@ -9,7 +9,10 @@ $ErrorActionPreference = "Stop"
 $packages = @(
     "Git.Git",
     "Microsoft.VisualStudioCode",
-    "Docker.DockerDesktop",
+    # Docker Desktop wordt NIET geïnstalleerd.
+    # Native docker-ce wordt geïnstalleerd in WSL2 via 01-dev-tools.sh.
+    # Docker Desktop containers zitten in een geïsoleerd netwerk (eigen VM) en
+    # kunnen Ollama in WSL2 niet bereiken zonder Windows-zijdige poortproxy.
     "Microsoft.PowerShell",
     "OpenJS.NodeJS.LTS",
     "Python.Python.3.12",
