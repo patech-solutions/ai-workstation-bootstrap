@@ -16,11 +16,10 @@
 
 - [ ] Git installeren
 - [ ] VS Code installeren
-- [ ] Docker Desktop installeren
 - [ ] WSL2 Ubuntu installeren
 - [ ] PowerShell 7 installeren
 - [ ] Windows Terminal installeren
-- [ ] Ollama installeren
+- [ ] Docker CE installeren in WSL2 (via 01-dev-tools.sh — niet Docker Desktop)
 
 ## WSL/dev
 
