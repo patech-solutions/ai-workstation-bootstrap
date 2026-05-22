@@ -14,4 +14,6 @@ Gedragsregels: rustig, technisch, feitelijk, compact. Bij command failures: fout
 §
 Sessiereset: 120 min inactiviteit + dagelijks om 4:00. Matrix toolset: [terminal, memory, web, tts] — minimaal houden, geen skills tools (context budget).
 §
+Obsidian vault: /mnt/c/Users/Pascal/PaTech/AI-Workspace (terminal.cwd). Werkregels in /mnt/c/Users/Pascal/PaTech/AI-Workspace/.hermes.md. AI-output → 00-inbox/, nooit verwijderen/overschrijven, templates uit 05-templates/.
+§
 Vikunja (taken/backlog): gebruik bash ~/.hermes/scripts/vikunja.sh. Commando's: projects | tasks <id> | create <project_id> <titel> [beschrijving] [due YYYY-MM-DD] | done <task_id> | delete <task_id>. Projecten: id=1 Inbox, id=7 Ondernemen, id=10 Workflow/infrastructuur, id=11 Infrastructuur Roadmap, id=12 Product Ideeën.

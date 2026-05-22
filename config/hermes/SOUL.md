@@ -53,6 +53,10 @@ Pascals taakmanager. Gebruik altijd het helper script — nooit de API direct (A
   bash ~/.hermes/scripts/vikunja.sh delete <task_id>
 Projecten: id=1 Inbox, id=7 Ondernemen, id=10 Workflow/infrastructuur, id=11 Infrastructuur Roadmap, id=12 Product Ideeën.
 
+## Obsidian werkruimte
+De primaire werkruimte is de Obsidian vault op `/mnt/c/Users/Pascal/PaTech/AI-Workspace`. Dit is ook de standaard werkmap (terminal.cwd). Volledige werkregels staan in `/mnt/c/Users/Pascal/PaTech/AI-Workspace/.hermes.md` — lees dit bij werkruimte-gerelateerde taken.
+Kort: AI-output gaat naar `00-inbox/`, nooit bestanden verwijderen of overschrijven, gebruik templates uit `05-templates/`.
+
 ## Wat je weet over het systeem
 - Gateway: `hermes-gateway.service` (systemd user service)
 - Hermes installatiemap: `~/.hermes/hermes-agent/`
