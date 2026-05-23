@@ -81,6 +81,9 @@ Sleutelconfiguratie in `.env`:
 | `EMBEDDING_VECTOR_DIMENSIONS` | `768` | Dimensies van nomic-embed-text |
 | `DERIVER_FLUSH_ENABLED` | `true` | Verwerkt representaties direct i.p.v. wachten op tokenbatch |
 | `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
+| `DERIVER_DEDUPLICATE` | `true` | Dedupliceert conclusions binnen een deriver-run |
+| `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit |
+| `DREAM_MIN_HOURS_BETWEEN_DREAMS` | `4` | Maximaal één Dream-cyclus per 4 uur |
 | Alle `*_MODEL_CONFIG__MODEL` | `qwen3-30b:iq2xxs` | Één model in VRAM, geen evictie |
 
 Alle Ollama-aanroepen vanuit Docker gaan via `host.docker.internal:11434` (= `172.17.0.1` via `host-gateway` in `extra_hosts`).
