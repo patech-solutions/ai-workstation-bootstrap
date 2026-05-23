@@ -30,26 +30,46 @@ cd ai-workstation-bootstrap
 chmod +x scripts/wsl/*.sh
 ./scripts/wsl/00-bootstrap-ubuntu.sh
 ./scripts/wsl/01-dev-tools.sh
-./scripts/wsl/02-ai-tools.sh
 ```
 
-## 5. Agent tools
+## 5. Ollama + modellen
 
 ```bash
-./scripts/wsl/03-hermes-agent.sh
-./scripts/wsl/04-honcho.sh
-./scripts/wsl/05-codex-cli.sh
-./scripts/wsl/06-claude-cli.sh
+./scripts/wsl/02-install-ollama.sh
+./scripts/wsl/03-models-ollama.sh
 ```
 
-## 6. Models
+## 6. Agent tools
 
 ```bash
-./scripts/wsl/07-models-ollama.sh
+./scripts/wsl/04-hermes-agent.sh
+./scripts/wsl/05-honcho.sh
 ```
 
-## 7. Verify
+Na `04-hermes-agent.sh`: voer `hermes setup` en `hermes memory setup` uit (interactief, zie `docs/05-hermes-honcho-codex-claude.md`).
+
+## 7. Web interfaces
+
+```bash
+./scripts/wsl/06-open-webui.sh
+./scripts/wsl/07-firecrawl.sh
+```
+
+## 8. CLI tools
+
+```bash
+npm install -g @openai/codex
+npm install -g @anthropic-ai/claude-code
+```
+
+## 9. Verify
 
 ```bash
 ./scripts/wsl/99-verify-wsl.sh
 ```
+
+Controleer ook handmatig:
+- Hermes: `systemctl --user status hermes-gateway.service`
+- Honcho API: `curl http://localhost:8000/health`
+- Honcho Dashboard: open `http://localhost:8080` in browser
+- Open WebUI: open `http://localhost:3000` in browser

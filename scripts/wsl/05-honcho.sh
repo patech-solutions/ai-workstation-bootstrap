@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 echo "== Install local Honcho =="
 
 BASE_DIR="$HOME/.local/share/patech"
@@ -80,11 +83,16 @@ set_env VECTOR_STORE_MIGRATED "false"
 
 docker compose up -d --build
 
-# Honcho dashboard als systemd user service
+# Honcho dashboard — script vanuit repo installeren
 DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"
 SERVICE_FILE="$HOME/.config/systemd/user/honcho-dashboard.service"
 
-if [ -f "$DASHBOARD_SCRIPT" ]; then
+mkdir -p "$HOME/.hermes/scripts"
+cp "$REPO_ROOT/config/hermes/scripts/honcho-dashboard.py" "$DASHBOARD_SCRIPT"
+echo "honcho-dashboard.py geïnstalleerd"
+
+# Systemd user service
+if true; then
   mkdir -p "$HOME/.config/systemd/user"
   cat > "$SERVICE_FILE" << 'EOF'
 [Unit]
@@ -108,7 +116,7 @@ EOF
   systemctl --user daemon-reload
   systemctl --user enable --now honcho-dashboard.service
   echo "Dashboard beschikbaar op http://localhost:8080"
-fi
+fi  # end systemd block
 
 echo ""
 echo "Honcho gestart op http://localhost:8000"

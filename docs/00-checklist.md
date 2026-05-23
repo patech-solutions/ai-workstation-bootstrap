@@ -33,14 +33,17 @@
 
 ## AI-stack
 
-- [ ] Ollama bereikbaar
-- [ ] Open WebUI starten
-- [ ] Modellen pullen
-- [ ] Hermes Agent installeren (`04-hermes-agent.sh` — installeert ook SOUL.md + basis geheugen)
-- [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief)
-- [ ] Honcho configureren
-- [ ] Codex CLI installeren
-- [ ] Claude CLI installeren
+- [ ] Ollama installeren (`02-install-ollama.sh`)
+- [ ] Modellen pullen (`03-models-ollama.sh` — qwen3-30b:iq2xxs, nomic-embed-text, gemma4:e4b)
+- [ ] Open WebUI starten (`06-open-webui.sh` — bereikbaar op `:3000`)
+- [ ] Hermes Agent installeren (`04-hermes-agent.sh` — SOUL.md + basis geheugen)
+- [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief, zie `05-hermes-honcho-codex-claude.md`)
+- [ ] SOUL.md herstellen na `hermes setup` (setup overschrijft het bestand)
+- [ ] Honcho starten (`05-honcho.sh` — Docker stack + dashboard service)
+- [ ] Honcho API bereikbaar: `curl http://localhost:8000/health`
+- [ ] Honcho Dashboard bereikbaar: `http://localhost:8080`
+- [ ] Codex CLI installeren (`npm install -g @openai/codex`)
+- [ ] Claude CLI installeren (`npm install -g @anthropic-ai/claude-code`)
 
 ## Validatie
 

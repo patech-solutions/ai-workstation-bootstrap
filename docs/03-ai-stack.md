@@ -7,9 +7,10 @@
 3. Native docker-ce in WSL2 (niet Docker Desktop)
 4. Ollama voor lokale modellen (native in WSL2, luistert op `0.0.0.0:11434`)
 5. Honcho voor lokale memory (Docker, bereikt Ollama via `host.docker.internal`)
-6. Open WebUI voor lokale browserinterface (Docker, bereikt Ollama via `host.docker.internal`)
-7. Firecrawl voor web extractie (Docker)
-8. Hermes Agent voor agentische workflows (systemd user service)
+6. Honcho Dashboard voor monitoring en inzage (systemd user service, `:8080`)
+7. Open WebUI voor lokale browserinterface (Docker, bereikt Ollama via `host.docker.internal`)
+8. Firecrawl voor web extractie (Docker)
+9. Hermes Agent voor agentische workflows (systemd user service)
 
 ## Waarom native docker-ce en niet Docker Desktop
 
@@ -41,7 +42,11 @@ Ollama wordt automatisch ontdekt via `host.docker.internal:11434`.
 
 Bereikbaar op: `http://localhost:8000`
 
+Dashboard op: `http://localhost:8080`
+
 Na installatie: `hermes memory setup` → kies Lokaal → `http://localhost:8000`
+
+Zie `docs/05-hermes-honcho-codex-claude.md` voor uitleg over embeddings, VRAM-profiel en configuratieparameters.
 
 ## LiteLLM optioneel
 
