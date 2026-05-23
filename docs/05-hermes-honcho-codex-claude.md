@@ -47,6 +47,23 @@ Relevante bestanden:
 - `~/.hermes/SOUL.md` — Atlas identiteit en gedragsregels (canoniek: `config/hermes/SOUL.md`)
 - `~/.hermes/memories/MEMORY.md` — werkgeheugen (canoniek: `config/hermes/MEMORY.md`)
 - `~/.hermes/config.yaml` — Hermes configuratie (model, memory backend, etc.)
+- `~/.hermes/honcho.json` — Honcho verbinding en peer-configuratie (canoniek: `config/hermes/honcho.json`)
+
+**Belangrijk:** Na `hermes memory setup` moet `honcho.json` handmatig worden aangevuld met `pinPeerName: true` in het `hosts.hermes` blok. Zonder dit wordt de Matrix user ID (`@pascal:thuis.matrix.duckdns.org`) gebruikt als peer naam, wat een leading dash introduceert en `honcho_conclude` kapot maakt:
+
+```json
+{
+  "hosts": {
+    "hermes": {
+      "peerName": "pascal",
+      "aiPeer": "atlas",
+      "workspace": "patech-wsa-01",
+      "pinPeerName": true,
+      ...
+    }
+  }
+}
+```
 
 ---
 

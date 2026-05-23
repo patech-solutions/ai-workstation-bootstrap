@@ -1,0 +1,19 @@
+{
+  "hosts": {
+    "hermes": {
+      "peerName": "pascal",
+      "aiPeer": "atlas",
+      "workspace": "patech-wsa-01",
+      "observationMode": "directional",
+      "writeFrequency": "async",
+      "recallMode": "hybrid",
+      "dialecticCadence": 2,
+      "dialecticReasoningLevel": "low",
+      "sessionStrategy": "per-session",
+      "pinPeerName": true,
+      "enabled": true,
+      "saveMessages": true
+    }
+  },
+  "baseUrl": "http://localhost:8000"
+}

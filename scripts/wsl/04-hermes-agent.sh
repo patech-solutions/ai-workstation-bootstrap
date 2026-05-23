@@ -34,6 +34,17 @@ context_lengths:
   aya-expanse:8b@http://localhost:11434/v1/: 131072
 EOF
 
+# honcho.json — altijd vanuit repo installeren (bevat pinPeerName en peer config)
+echo "-- honcho.json installeren --"
+HONCHO_DST="$HOME/.hermes/honcho.json"
+if [[ -f "$HONCHO_DST" ]]; then
+    BACKUP="${HONCHO_DST}.bak.$(date +%Y%m%d_%H%M%S)"
+    cp "$HONCHO_DST" "$BACKUP"
+    echo "   bestaande honcho.json gebackupt naar: $BACKUP"
+fi
+cp "$CONFIG_DIR/honcho.json" "$HONCHO_DST"
+echo "   honcho.json geïnstalleerd"
+
 # SOUL.md — altijd vanuit repo installeren (is configuratie, geen data)
 # Bestaande versie wordt gebackupt zodat niets verloren gaat
 echo "-- SOUL.md installeren --"
@@ -101,7 +112,7 @@ Na setup:
   systemctl --user enable hermes-gateway.service
   systemctl --user start hermes-gateway.service
 
-SOUL.md herstellen na hermes setup:
-  cp ~/ai-workstation-bootstrap/config/hermes/SOUL.md ~/.hermes/SOUL.md
-  (of opnieuw dit script draaien)
+SOUL.md en honcho.json worden hersteld door dit script opnieuw te draaien.
+Let op: hermes setup overschrijft honcho.json. Herstel daarna met:
+  cp ~/ai-workstation-bootstrap/config/hermes/honcho.json ~/.hermes/honcho.json
 MSG

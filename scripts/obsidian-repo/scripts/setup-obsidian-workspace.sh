@@ -3,9 +3,9 @@ set -euo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-source "${BASE_DIR}/config/obsidian.env"
+source "../config/obsidian.env"
 
-"${BASE_DIR}/scripts/obsidian/install-obsidian.sh"
+#"${BASE_DIR}/scripts/obsidian/install-obsidian.sh"
 "${BASE_DIR}/scripts/obsidian/create-vault.sh"
 "${BASE_DIR}/scripts/obsidian/create-templates.sh"
 "${BASE_DIR}/scripts/obsidian/init-git.sh"
