@@ -134,19 +134,21 @@ def api_session_messages(sid, page=1, size=50):
 
 
 def api_conclusions(observer=None, observed=None, page=1, size=30):
-    payload = {"size": size, "page": page}
+    filters = {}
     if observer:
-        payload["observer"] = observer
+        filters["observer_id"] = observer
     if observed:
-        payload["observed"] = observed
-    data = hpost(f"/v3/workspaces/{WORKSPACE}/conclusions/list", payload)
+        filters["observed_id"] = observed
+    qs   = urllib.parse.urlencode({"page": page, "size": size})
+    body = {"filters": filters} if filters else {}
+    data = hpost(f"/v3/workspaces/{WORKSPACE}/conclusions/list?{qs}", body)
     docs = []
     for d in data.get("items", []):
         docs.append({
             "id":         d.get("id") or "",
             "content":    d.get("content") or "",
-            "observer":   d.get("observer") or d.get("observer_id") or "",
-            "observed":   d.get("observed") or d.get("observed_id") or "",
+            "observer":   d.get("observer_id") or d.get("observer") or "",
+            "observed":   d.get("observed_id") or d.get("observed") or "",
             "level":      d.get("level") or "",
             "created_at": (d.get("created_at") or "")[:16].replace("T", " "),
             "session":    d.get("session_name") or "",
@@ -713,6 +715,8 @@ async function loadPeerDetail(pid) {
     `<div class="repr-box ctx-panel" id="ctx-${esc(obs)}" style="${obs===pid?'':'display:none'}">${esc(content) || '(leeg)'}</div>`
   ).join('');
 
+  const initialObserver = pid; // self-observation tab is active by default
+
   $('peer-detail').innerHTML = `
     <h3 style="margin-bottom:12px">${esc(pid)}</h3>
     <h2>Globale Representatie</h2>
@@ -725,6 +729,15 @@ async function loadPeerDetail(pid) {
         <h2 style="margin:0">Observaties</h2>
         <span id="peer-obs-total" style="color:var(--muted);font-size:12px"></span>
       </div>
+      <div class="filters" style="margin-bottom:10px">
+        <div class="search-wrap">
+          <input type="text" id="peer-obs-search" placeholder="Zoeken in observaties…"
+            oninput="onPeerSearchInput()" autocomplete="off">
+          <button class="search-clear" id="peer-obs-clear-btn" onclick="clearPeerSearch()"
+            style="display:none" title="Wis zoekopdracht">×</button>
+        </div>
+        <span id="peer-obs-search-info" style="font-size:12px;color:var(--accent2);display:none"></span>
+      </div>
       <div id="peer-obs-list"><div class="spinner"></div></div>
       <div class="pager" id="peer-obs-pager" style="display:none">
         <button class="btn" id="peer-obs-prev">← Vorige</button>
@@ -733,14 +746,17 @@ async function loadPeerDetail(pid) {
       </div>
     </div>`;
 
-  loadPeerConclusions(pid, 1);
+  loadPeerConclusions(pid, 1, initialObserver);
 }
 
-let peerObsState = { pid: '', page: 1, pages: 1 };
+let peerObsState = { pid: '', observer: '', page: 1, pages: 1 };
+let peerSearchTimer;
 
-async function loadPeerConclusions(pid, page) {
-  peerObsState = { pid, page, pages: 1 };
-  const res  = await fetch(`/api/conclusions?observed=${encodeURIComponent(pid)}&page=${page}&size=20`);
+async function loadPeerConclusions(pid, page, observer) {
+  peerObsState = { pid, observer: observer || '', page, pages: 1 };
+  const params = new URLSearchParams({ observed: pid, page, size: 20 });
+  if (observer) params.set('observer', observer);
+  const res  = await fetch(`/api/conclusions?${params}`);
   const data = await res.json();
   peerObsState.pages = data.pages;
 
@@ -757,10 +773,50 @@ async function loadPeerConclusions(pid, page) {
   const pager = $('peer-obs-pager');
   pager.style.display = data.pages > 1 ? 'flex' : 'none';
   $('peer-obs-page-label').textContent = `Pagina ${data.page} van ${data.pages}`;
-  $('peer-obs-prev').onclick  = () => loadPeerConclusions(pid, page - 1);
-  $('peer-obs-next').onclick  = () => loadPeerConclusions(pid, page + 1);
+  $('peer-obs-prev').onclick  = () => loadPeerConclusions(pid, page - 1, observer);
+  $('peer-obs-next').onclick  = () => loadPeerConclusions(pid, page + 1, observer);
   $('peer-obs-prev').disabled = page <= 1;
   $('peer-obs-next').disabled = page >= data.pages;
+}
+
+function onPeerSearchInput() {
+  const q = $('peer-obs-search').value.trim();
+  $('peer-obs-clear-btn').style.display = q ? 'block' : 'none';
+  clearTimeout(peerSearchTimer);
+  if (!q) { clearPeerSearch(); return; }
+  peerSearchTimer = setTimeout(() => runPeerSearch(q), 400);
+}
+
+async function runPeerSearch(q) {
+  $('peer-obs-pager').style.display = 'none';
+  $('peer-obs-search-info').style.display = 'inline';
+  $('peer-obs-search-info').innerHTML = '<span class="search-spinner"></span>';
+  $('peer-obs-list').innerHTML = '<div class="spinner"></div>';
+
+  const { pid, observer } = peerObsState;
+  const url = `/api/conclusions/search?q=${encodeURIComponent(q)}&top_k=50` +
+              (observer ? `&observer=${encodeURIComponent(observer)}` : '') +
+              `&observed=${encodeURIComponent(pid)}`;
+  const res  = await fetch(url);
+  const data = await res.json();
+
+  $('peer-obs-total').textContent = `${data.total} resultaten`;
+  $('peer-obs-search-info').style.display = 'inline';
+  $('peer-obs-search-info').textContent = `${data.total} resultaten voor "${q}"`;
+
+  $('peer-obs-list').innerHTML = data.docs.length
+    ? renderDocItems(data.docs)
+    : '<div class="empty">geen resultaten</div>';
+}
+
+function clearPeerSearch() {
+  const inp = $('peer-obs-search');
+  if (!inp) return;
+  inp.value = '';
+  $('peer-obs-clear-btn').style.display = 'none';
+  $('peer-obs-search-info').style.display = 'none';
+  const { pid, observer } = peerObsState;
+  loadPeerConclusions(pid, 1, observer);
 }
 
 function switchCtx(el, pid) {
@@ -769,6 +825,11 @@ function switchCtx(el, pid) {
   document.querySelectorAll('.ctx-panel').forEach(p => p.style.display = 'none');
   const target = document.getElementById('ctx-' + el.dataset.ctx);
   if (target) target.style.display = 'block';
+  // Herlaad observaties gefilterd op de nieuwe observer, reset zoekopdracht
+  const inp = $('peer-obs-search');
+  if (inp) { inp.value = ''; $('peer-obs-clear-btn').style.display = 'none'; }
+  $('peer-obs-search-info') && ($('peer-obs-search-info').style.display = 'none');
+  loadPeerConclusions(pid, 1, el.dataset.ctx);
 }
 
 function renderPeerTabs(peers) {
