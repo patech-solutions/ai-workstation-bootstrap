@@ -49,21 +49,21 @@ set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
 # Deriver — achtergrondverwerking van geheugen (licht model)
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
-set_env DERIVER_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DERIVER_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
 
 # Summary
 set_env SUMMARY_MODEL_CONFIG__TRANSPORT "openai"
-set_env SUMMARY_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env SUMMARY_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env SUMMARY_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
 # Dream — geheugenconsolidatie op de achtergrond
 set_env DREAM_DEDUCTION_MODEL_CONFIG__TRANSPORT "openai"
-set_env DREAM_DEDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DREAM_DEDUCTION_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env DREAM_DEDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DREAM_INDUCTION_MODEL_CONFIG__TRANSPORT "openai"
-set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
+set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env DREAM_INDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
 # Dialectic — zelfde model als Hermes zodat het warm blijft in VRAM
