@@ -145,8 +145,8 @@ def api_conclusions(observer=None, observed=None, page=1, size=30):
         docs.append({
             "id":         d.get("id") or "",
             "content":    d.get("content") or "",
-            "observer":   d.get("observer") or "",
-            "observed":   d.get("observed") or "",
+            "observer":   d.get("observer") or d.get("observer_id") or "",
+            "observed":   d.get("observed") or d.get("observed_id") or "",
             "level":      d.get("level") or "",
             "created_at": (d.get("created_at") or "")[:16].replace("T", " "),
             "session":    d.get("session_name") or "",
@@ -157,6 +157,31 @@ def api_conclusions(observer=None, observed=None, page=1, size=30):
         "page":  page,
         "pages": data.get("pages", 1),
     }
+
+
+def api_conclusions_search(query, observer, observed, top_k=50):
+    filters = {}
+    if observer:
+        filters["observer_id"] = observer
+    if observed:
+        filters["observed_id"] = observed
+    data = hpost(f"/v3/workspaces/{WORKSPACE}/conclusions/query", {
+        "query":   query,
+        "top_k":   top_k,
+        "filters": filters or None,
+    })
+    docs = []
+    for d in (data if isinstance(data, list) else data.get("items", [])):
+        docs.append({
+            "id":         d.get("id") or "",
+            "content":    d.get("content") or "",
+            "observer":   d.get("observer_id") or d.get("observer") or "",
+            "observed":   d.get("observed_id") or d.get("observed") or "",
+            "level":      d.get("level") or "",
+            "created_at": (d.get("created_at") or "")[:16].replace("T", " "),
+            "session":    d.get("session_name") or "",
+        })
+    return {"docs": docs, "query": query, "total": len(docs)}
 
 
 def api_peer_detail(pid):
@@ -276,6 +301,12 @@ select:focus,input:focus{outline:none;border-color:var(--accent);}
 .doc-del{position:absolute;top:10px;right:0;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 7px;border-radius:4px;transition:all .15s;}
 .doc-del:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.08);}
 .doc-del.confirm{color:var(--red);border-color:var(--red);font-weight:600;}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:340px;}
+.search-wrap input{width:100%;padding-right:28px;}
+.search-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0;}
+.search-clear:hover{color:var(--text);}
+.search-info{font-size:12px;color:var(--accent2);padding:4px 0 10px;display:flex;align-items:center;gap:8px;}
+.search-spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 
 /* Peer detail */
 .repr-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:500px;overflow-y:auto;margin-bottom:14px;}
@@ -338,10 +369,15 @@ select:focus,input:focus{outline:none;border-color:var(--accent);}
   <div class="page" id="page-memory">
     <div class="header-row"><h2>Geheugen / Observaties</h2></div>
     <div class="filters">
+      <div class="search-wrap">
+        <input type="text" id="doc-search" placeholder="Zoeken in geheugen…" oninput="onSearchInput()" autocomplete="off">
+        <button class="search-clear" id="search-clear-btn" onclick="clearSearch()" style="display:none" title="Wis zoekopdracht">×</button>
+      </div>
       <select id="obs-observer" onchange="loadDocs()"><option value="">Alle observers</option></select>
       <select id="obs-observed" onchange="loadDocs()"><option value="">Alle observed</option></select>
       <span id="doc-total" style="color:var(--muted);font-size:12px;margin-left:4px;"></span>
     </div>
+    <div id="search-info" class="search-info" style="display:none"></div>
     <div class="card" id="docs-list"><div class="spinner"></div></div>
     <div class="pager" id="docs-pager" style="display:none">
       <button class="btn" id="docs-prev" onclick="docPage(-1)">← Vorige</button>
@@ -510,6 +546,65 @@ async function loadMessages(sid, page) {
 }
 
 // ─── Memory ──────────────────────────────────────────────────────────────────
+let searchTimer;
+
+function onSearchInput() {
+  const q = $('doc-search').value.trim();
+  $('search-clear-btn').style.display = q ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  if (!q) { clearSearch(); return; }
+  searchTimer = setTimeout(() => runSearch(q), 400);
+}
+
+function clearSearch() {
+  $('doc-search').value = '';
+  $('search-clear-btn').style.display = 'none';
+  $('search-info').style.display = 'none';
+  $('docs-pager').style.display = '';
+  docState.page = 1;
+  loadDocs();
+}
+
+function searchObserver() {
+  const v = $('obs-observer').value;
+  if (v) return v;
+  // standaard: de AI-peer (atlas)
+  return (state.peers.find(p => p.id === 'atlas') || state.peers[0] || {}).id || '';
+}
+function searchObserved() {
+  const v = $('obs-observed').value;
+  if (v) return v;
+  // standaard: de niet-atlas peer
+  return (state.peers.find(p => p.id !== 'atlas') || state.peers[0] || {}).id || '';
+}
+
+async function runSearch(q) {
+  $('docs-pager').style.display = 'none';
+  $('search-info').style.display = 'flex';
+  $('search-info').innerHTML = `<span class="search-spinner"></span> Semantisch zoeken naar "<em>${esc(q)}</em>"…`;
+  $('docs-list').innerHTML = '<div class="spinner"></div>';
+
+  const observer = searchObserver();
+  const observed = searchObserved();
+  const url = `/api/conclusions/search?q=${encodeURIComponent(q)}&top_k=50` +
+              (observer ? `&observer=${encodeURIComponent(observer)}` : '') +
+              (observed ? `&observed=${encodeURIComponent(observed)}` : '');
+
+  const res  = await fetch(url);
+  const data = await res.json();
+
+  $('doc-total').textContent = `${data.total} resultaten`;
+  $('search-info').innerHTML =
+    `<b>${data.total}</b> semantische resultaten voor "<em>${esc(q)}</em>"` +
+    (observer ? ` &nbsp;·&nbsp; observer: <span class="tag">${esc(observer)}</span>` : '');
+
+  if (!data.docs.length) {
+    $('docs-list').innerHTML = '<div class="empty">geen resultaten gevonden</div>';
+    return;
+  }
+  $('docs-list').innerHTML = renderDocItems(data.docs);
+}
+
 function populatePeerFilters(peers) {
   const obsrvr = $('obs-observer');
   const obsrvd = $('obs-observed');
@@ -522,7 +617,23 @@ function populatePeerFilters(peers) {
   });
 }
 
+function renderDocItems(docs) {
+  return docs.map(d => `
+    <div class="doc-item" data-id="${esc(d.id)}">
+      <button class="doc-del" title="Verwijder observatie" onclick="deleteConcl('${esc(d.id)}',this)">✕</button>
+      <div class="doc-content">${esc(d.content)}</div>
+      <div class="doc-meta">
+        ${d.level ? `<span class="level-badge ${d.level}">${esc(d.level)}</span>` : ''}
+        ${d.observer ? `<span>observer: <b>${esc(d.observer)}</b></span>` : ''}
+        ${d.observed ? `<span>observed: <b>${esc(d.observed)}</b></span>` : ''}
+        <span>${esc(d.created_at)}</span>
+        ${d.session ? `<span>sessie: ${esc(d.session)}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
 async function loadDocs() {
+  if ($('doc-search') && $('doc-search').value.trim()) return; // search mode active
   const observer = $('obs-observer').value;
   const observed = $('obs-observed').value;
   const page     = docState.page;
@@ -539,18 +650,7 @@ async function loadDocs() {
     return;
   }
 
-  $('docs-list').innerHTML = data.docs.map(d => `
-    <div class="doc-item" data-id="${esc(d.id)}">
-      <button class="doc-del" title="Verwijder observatie" onclick="deleteConcl('${esc(d.id)}',this)">✕</button>
-      <div class="doc-content">${esc(d.content)}</div>
-      <div class="doc-meta">
-        <span class="level-badge ${d.level}">${esc(d.level)}</span>
-        <span>observer: <b>${esc(d.observer)}</b></span>
-        <span>observed: <b>${esc(d.observed)}</b></span>
-        <span>${esc(d.created_at)}</span>
-        ${d.session ? `<span>sessie: ${esc(d.session)}</span>` : ''}
-      </div>
-    </div>`).join('');
+  $('docs-list').innerHTML = renderDocItems(data.docs);
 
   $('docs-pager').style.display = data.pages > 1 ? 'flex' : 'none';
   $('docs-page-label').textContent = `Pagina ${data.page} van ${data.pages}`;
@@ -722,6 +822,18 @@ class Handler(BaseHTTPRequestHandler):
             page = int(qp("page", "1"))
             size = int(qp("size", "40"))
             self.send_json(api_session_messages(sid, page, size))
+
+        elif path == "/api/conclusions/search":
+            q = qp("q")
+            if not q:
+                self.send_json({"docs": [], "query": "", "total": 0})
+            else:
+                self.send_json(api_conclusions_search(
+                    q,
+                    observer=qp("observer") or None,
+                    observed=qp("observed") or None,
+                    top_k=int(qp("top_k", "50")),
+                ))
 
         elif path == "/api/conclusions":
             self.send_json(api_conclusions(
