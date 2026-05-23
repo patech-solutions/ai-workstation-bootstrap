@@ -80,6 +80,36 @@ set_env VECTOR_STORE_MIGRATED "false"
 
 docker compose up -d --build
 
+# Honcho dashboard als systemd user service
+DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"
+SERVICE_FILE="$HOME/.config/systemd/user/honcho-dashboard.service"
+
+if [ -f "$DASHBOARD_SCRIPT" ]; then
+  mkdir -p "$HOME/.config/systemd/user"
+  cat > "$SERVICE_FILE" << 'EOF'
+[Unit]
+Description=Honcho Memory Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pascal/.hermes/scripts/honcho-dashboard.py
+WorkingDirectory=/home/pascal/.hermes
+Environment="HONCHO_URL=http://localhost:8000"
+Environment="HONCHO_WORKSPACE=patech-wsa-01"
+Environment="DASHBOARD_PORT=8080"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+EOF
+  systemctl --user daemon-reload
+  systemctl --user enable --now honcho-dashboard.service
+  echo "Dashboard beschikbaar op http://localhost:8080"
+fi
+
 echo ""
 echo "Honcho gestart op http://localhost:8000"
 echo "Stel in Hermes in via: hermes memory setup → Lokaal → http://localhost:8000"
