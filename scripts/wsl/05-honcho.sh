@@ -52,6 +52,7 @@ set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
 set_env DERIVER_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
+set_env DERIVER_FLUSH_ENABLED "true"
 
 # Summary
 set_env SUMMARY_MODEL_CONFIG__TRANSPORT "openai"
