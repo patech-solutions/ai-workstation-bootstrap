@@ -143,6 +143,7 @@ def api_conclusions(observer=None, observed=None, page=1, size=30):
     docs = []
     for d in data.get("items", []):
         docs.append({
+            "id":         d.get("id") or "",
             "content":    d.get("content") or "",
             "observer":   d.get("observer") or "",
             "observed":   d.get("observed") or "",
@@ -265,13 +266,16 @@ tr.clickable{cursor:pointer;}tr.clickable:hover td{background:var(--surface2);}
 .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
 select,input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;}
 select:focus,input:focus{outline:none;border-color:var(--accent);}
-.doc-item{padding:10px 0;border-bottom:1px solid var(--border);}
+.doc-item{padding:10px 0;border-bottom:1px solid var(--border);position:relative;}
 .doc-item:last-child{border-bottom:none;}
-.doc-content{font-size:13px;line-height:1.5;}
+.doc-content{font-size:13px;line-height:1.5;padding-right:52px;}
 .doc-meta{font-size:10px;color:var(--muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;}
 .level-badge{font-size:10px;padding:1px 6px;border-radius:10px;}
 .level-badge.explicit{background:#1e3a5f;color:var(--blue);}
 .level-badge.deductive{background:#3b1f5e;color:#c084fc;}
+.doc-del{position:absolute;top:10px;right:0;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 7px;border-radius:4px;transition:all .15s;}
+.doc-del:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.08);}
+.doc-del.confirm{color:var(--red);border-color:var(--red);font-weight:600;}
 
 /* Peer detail */
 .repr-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:500px;overflow-y:auto;margin-bottom:14px;}
@@ -536,7 +540,8 @@ async function loadDocs() {
   }
 
   $('docs-list').innerHTML = data.docs.map(d => `
-    <div class="doc-item">
+    <div class="doc-item" data-id="${esc(d.id)}">
+      <button class="doc-del" title="Verwijder observatie" onclick="deleteConcl('${esc(d.id)}',this)">✕</button>
       <div class="doc-content">${esc(d.content)}</div>
       <div class="doc-meta">
         <span class="level-badge ${d.level}">${esc(d.level)}</span>
@@ -556,6 +561,37 @@ async function loadDocs() {
 function docPage(delta) {
   docState.page = Math.max(1, Math.min(docState.pages, docState.page + delta));
   loadDocs();
+}
+
+function deleteConcl(id, btn) {
+  if (btn.dataset.confirm === '1') {
+    btn.textContent = '…'; btn.disabled = true;
+    fetch('/api/conclusions/' + encodeURIComponent(id), {method: 'DELETE'})
+      .then(r => {
+        if (r.ok || r.status === 204) {
+          const item = btn.closest('.doc-item');
+          item.style.transition = 'opacity .25s';
+          item.style.opacity = '0';
+          setTimeout(() => { item.remove(); updateDocTotal(-1); }, 260);
+        } else {
+          btn.textContent = 'Fout'; btn.disabled = false; btn.dataset.confirm = '';
+          setTimeout(() => { btn.textContent = '✕'; btn.classList.remove('confirm'); }, 2000);
+        }
+      });
+  } else {
+    btn.dataset.confirm = '1'; btn.textContent = 'Zeker?'; btn.classList.add('confirm');
+    setTimeout(() => {
+      if (btn.dataset.confirm === '1') {
+        btn.dataset.confirm = ''; btn.textContent = '✕'; btn.classList.remove('confirm');
+      }
+    }, 3000);
+  }
+}
+
+function updateDocTotal(delta) {
+  const el = $('doc-total');
+  const m = el.textContent.match(/(\d+)/);
+  if (m) el.textContent = el.textContent.replace(m[0], Math.max(0, parseInt(m[0]) + delta));
 }
 
 // ─── Peers ───────────────────────────────────────────────────────────────────
@@ -699,6 +735,30 @@ class Handler(BaseHTTPRequestHandler):
             pid = urllib.parse.unquote(path[len("/api/peers/"):])
             self.send_json(api_peer_detail(pid))
 
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_DELETE(self):
+        parsed = urllib.parse.urlparse(self.path)
+        path   = parsed.path
+        if path.startswith("/api/conclusions/"):
+            cid = urllib.parse.unquote(path[len("/api/conclusions/"):])
+            try:
+                req = urllib.request.Request(
+                    f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/conclusions/{urllib.parse.quote(cid, safe='')}",
+                    method="DELETE",
+                )
+                with urllib.request.urlopen(req, timeout=8):
+                    pass
+                self.send_response(204)
+                self.end_headers()
+            except urllib.error.HTTPError as e:
+                self.send_response(e.code)
+                self.end_headers()
+            except Exception:
+                self.send_response(500)
+                self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
