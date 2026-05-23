@@ -719,7 +719,48 @@ async function loadPeerDetail(pid) {
     <div class="repr-box">${esc(data.representation) || '(leeg)'}</div>
     <h2>Context per Observer</h2>
     <div class="peer-tabs" id="ctx-tabs">${ctxTabs}</div>
-    ${ctxPanels}`;
+    ${ctxPanels}
+    <div style="margin-top:20px">
+      <div class="header-row" style="margin-bottom:8px">
+        <h2 style="margin:0">Observaties</h2>
+        <span id="peer-obs-total" style="color:var(--muted);font-size:12px"></span>
+      </div>
+      <div id="peer-obs-list"><div class="spinner"></div></div>
+      <div class="pager" id="peer-obs-pager" style="display:none">
+        <button class="btn" id="peer-obs-prev">← Vorige</button>
+        <span id="peer-obs-page-label" style="color:var(--muted)"></span>
+        <button class="btn" id="peer-obs-next">Volgende →</button>
+      </div>
+    </div>`;
+
+  loadPeerConclusions(pid, 1);
+}
+
+let peerObsState = { pid: '', page: 1, pages: 1 };
+
+async function loadPeerConclusions(pid, page) {
+  peerObsState = { pid, page, pages: 1 };
+  const res  = await fetch(`/api/conclusions?observed=${encodeURIComponent(pid)}&page=${page}&size=20`);
+  const data = await res.json();
+  peerObsState.pages = data.pages;
+
+  $('peer-obs-total').textContent = `${fmt(data.total)} observaties`;
+
+  if (!data.docs.length) {
+    $('peer-obs-list').innerHTML = '<div class="empty">geen observaties</div>';
+    $('peer-obs-pager').style.display = 'none';
+    return;
+  }
+
+  $('peer-obs-list').innerHTML = renderDocItems(data.docs);
+
+  const pager = $('peer-obs-pager');
+  pager.style.display = data.pages > 1 ? 'flex' : 'none';
+  $('peer-obs-page-label').textContent = `Pagina ${data.page} van ${data.pages}`;
+  $('peer-obs-prev').onclick  = () => loadPeerConclusions(pid, page - 1);
+  $('peer-obs-next').onclick  = () => loadPeerConclusions(pid, page + 1);
+  $('peer-obs-prev').disabled = page <= 1;
+  $('peer-obs-next').disabled = page >= data.pages;
 }
 
 function switchCtx(el, pid) {
