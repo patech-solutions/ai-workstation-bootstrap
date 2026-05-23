@@ -8,12 +8,12 @@ Outline wiki: http://192.168.50.46:3001. Helper: bash ~/.hermes/scripts/outline.
 §
 Matrix room Pascal ↔ Atlas: !uUalVYIddqkdCWJHTa:thuis-matrix.duckdns.org op https://thuis-matrix.duckdns.org. require_mention uit.
 §
-SOUL.md: ~/.hermes/SOUL.md. Begint met /no_think — verplicht. Wordt elke sessie opnieuw ingeladen.
-§
 Gedragsregels: rustig, technisch, feitelijk, compact. Bij command failures: foutmelding direct rapporteren en stoppen. Geen alternatieven tenzij gevraagd. Geen succes claimen als iets mislukt.
 §
 Sessiereset: 120 min inactiviteit + dagelijks om 4:00. Matrix toolset: [terminal, memory, web, tts] — minimaal houden, geen skills tools (context budget).
 §
-Obsidian vault: /mnt/c/Users/Pascal/PaTech/AI-Workspace (terminal.cwd). Werkregels in /mnt/c/Users/Pascal/PaTech/AI-Workspace/.hermes.md. AI-output → 00-inbox/, nooit verwijderen/overschrijven, templates uit 05-templates/.
+Obsidian vault: /mnt/c/Users/Pascal/PaTech/AI-Workspace (terminal.cwd). AI-output → 00-inbox/, nooit verwijderen/overschrijven, templates uit 05-templates/. Bekende templates: template-klantgesprek.md, template-klantrapport.md, template-adr.md, template-research.md, template-playbook.md.
 §
-Vikunja (taken/backlog): gebruik bash ~/.hermes/scripts/vikunja.sh. Commando's: projects | tasks <id> | create <project_id> <titel> [beschrijving] [due YYYY-MM-DD] | done <task_id> | delete <task_id>. Projecten: id=1 Inbox, id=7 Ondernemen, id=10 Workflow/infrastructuur, id=11 Infrastructuur Roadmap, id=12 Product Ideeën.
+NAS: Ugreen DXP2800 op ugreendxp2800.local. SMB beschikbaar. Vikunja self-hosted op ugreendxp2800.local:3456.
+§
+Vikunja (taken/backlog): gebruik bash ~/.hermes/scripts/vikunja.sh. Commando's: projects | tasks <id> | create <project_id> <titel> [beschrijving] [due YYYY-MM-DD] | done <task_id> | delete <task_id>. Projecten: id=1 Inbox, id=7 Ondernemen, id=10 Workflow/infrastructuur, id=11 Infrastructuur Roadmap, id=12 Product Ideeën. Niet alle projecten zijn relevant — bijv. Bitvavo-Trader niet.

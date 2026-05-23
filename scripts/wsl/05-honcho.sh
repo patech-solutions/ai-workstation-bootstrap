@@ -40,8 +40,12 @@ set_env() {
 # LLM provider: Ollama via OpenAI-compatible API
 set_env LLM_OPENAI_API_KEY "ollama"
 
-# Embeddings uitgeschakeld (geen lokaal embedding model)
+# Embeddings via Ollama — nomic-embed-text (274 MB, past naast qwen3-30b:iq2xxs in VRAM)
 set_env EMBED_MESSAGES "false"
+set_env EMBEDDING_MODEL_CONFIG__TRANSPORT "openai"
+set_env EMBEDDING_MODEL_CONFIG__MODEL "nomic-embed-text"
+set_env EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
+set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
 # Deriver — achtergrondverwerking van geheugen (licht model)
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
