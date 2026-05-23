@@ -50,12 +50,14 @@ set_env EMBEDDING_MODEL_CONFIG__MODEL "nomic-embed-text"
 set_env EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
-# Deriver — achtergrondverwerking van geheugen (licht model)
+# Deriver — uitgeschakeld: qwen3-30b:iq2xxs hallucineerde persoonlijke data.
+# Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
+# Configuratie blijft staan voor toekomstig herinschakelen.
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
 set_env DERIVER_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
 set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
-set_env DERIVER_FLUSH_ENABLED "true"
+set_env DERIVER_FLUSH_ENABLED "false"
 set_env DERIVER_DEDUPLICATE "true"
 
 # Dream — drempelwaarden voor consolidatiecyclus
@@ -87,6 +89,26 @@ set_env VECTOR_STORE_TYPE "pgvector"
 set_env VECTOR_STORE_MIGRATED "false"
 
 docker compose up -d --build
+
+# Deriver uitschakelen via override — voorkomt automatisch herstarten na reboot
+OVERRIDE_FILE="$HONCHO_DIR/docker-compose.override.yml"
+if [ ! -f "$OVERRIDE_FILE" ]; then
+  cat > "$OVERRIDE_FILE" << 'EOF'
+# Deriver uitgeschakeld: qwen3-30b:iq2xxs hallucineerde te veel persoonlijke data.
+# Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
+# Herinschakelen: verwijder dit bestand of wijzig restart naar 'unless-stopped'.
+services:
+  deriver:
+    restart: "no"
+EOF
+  echo "docker-compose.override.yml aangemaakt (deriver disabled)"
+fi
+
+DOCKER_COMPOSE="/usr/libexec/docker/cli-plugins/docker-compose"
+if [ -x "$DOCKER_COMPOSE" ]; then
+  "$DOCKER_COMPOSE" -f docker-compose.yml -f docker-compose.override.yml stop deriver 2>/dev/null || true
+  echo "Deriver container gestopt"
+fi
 
 # Honcho dashboard — script vanuit repo installeren
 DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"

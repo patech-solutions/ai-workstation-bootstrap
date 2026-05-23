@@ -81,10 +81,12 @@ Dit script:
 - Installeert `honcho-dashboard.py` naar `~/.hermes/scripts/`
 - Start de Honcho Docker Compose stack
 - Installeert `honcho-dashboard.service` als systemd user service
+- Maakt `docker-compose.override.yml` aan met `restart: "no"` voor de deriver (zie sectie Deriver hieronder)
+- Stopt de deriver container na het starten
 
 ### Configuratie
 
-Honcho gebruikt Ollama via OpenAI-compatibele API. Alle LLM-taken (deriver, summary, dream, dialectic) draaien op `qwen3-30b:iq2xxs` — hetzelfde model als Hermes, zodat het warm blijft in VRAM.
+Honcho gebruikt Ollama via OpenAI-compatibele API. Alle LLM-taken (summary, dream, dialectic) draaien op `qwen3-30b:iq2xxs` — hetzelfde model als Hermes, zodat het warm blijft in VRAM.
 
 Embeddings lopen via `nomic-embed-text` (274 MB bestand, ~595 MB VRAM, 768 dimensies).
 
@@ -96,12 +98,34 @@ Sleutelconfiguratie in `.env`:
 | `EMBED_MESSAGES` | `false` | Geen berichtembeddings; alleen representaties |
 | `EMBEDDING_MODEL_CONFIG__MODEL` | `nomic-embed-text` | Past in VRAM naast qwen3-30b |
 | `EMBEDDING_VECTOR_DIMENSIONS` | `768` | Dimensies van nomic-embed-text |
-| `DERIVER_FLUSH_ENABLED` | `true` | Verwerkt representaties direct i.p.v. wachten op tokenbatch |
+| `DERIVER_FLUSH_ENABLED` | `false` | Deriver uitgeschakeld (zie sectie Deriver) |
 | `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
 | `DERIVER_DEDUPLICATE` | `true` | Dedupliceert conclusions binnen een deriver-run |
 | `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit |
 | `DREAM_MIN_HOURS_BETWEEN_DREAMS` | `4` | Maximaal één Dream-cyclus per 4 uur |
 | Alle `*_MODEL_CONFIG__MODEL` | `qwen3-30b:iq2xxs` | Één model in VRAM, geen evictie |
+
+### Deriver
+
+**De deriver is uitgeschakeld.** Reden: `qwen3-30b:iq2xxs` hallucineerde persoonlijke data (leeftijd, woonplaats, huisdier, geboortedatum). Conclusies worden uitsluitend via de `honcho_conclude` tool (Atlas) opgeslagen.
+
+Technische kanttekening: `DERIVER_ENABLED=false` in `.env` wordt **niet** gelezen door de Honcho broncode. De deriver moet als container worden gestopt. Het installatiescript regelt dit via `docker-compose.override.yml`:
+
+```yaml
+# ~/.local/share/patech/honcho/docker-compose.override.yml
+services:
+  deriver:
+    restart: "no"
+```
+
+Dit voorkomt dat de deriver na een reboot automatisch herstart. Na `docker compose up -d` stopt het script de container direct.
+
+**Herinschakelen** (als een beter model beschikbaar is):
+```bash
+rm ~/.local/share/patech/honcho/docker-compose.override.yml
+# Zet DERIVER_FLUSH_ENABLED=true in .env
+cd ~/.local/share/patech/honcho && docker compose up -d
+```
 
 Alle Ollama-aanroepen vanuit Docker gaan via `host.docker.internal:11434` (= `172.17.0.1` via `host-gateway` in `extra_hosts`).
 
