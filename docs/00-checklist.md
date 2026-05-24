@@ -34,7 +34,7 @@
 ## AI-stack
 
 - [ ] Ollama installeren (`02-install-ollama.sh`)
-- [ ] Modellen pullen (`03-models-ollama.sh` — qwen3-30b:iq2xxs, nomic-embed-text, gemma4:e4b)
+- [ ] Modellen pullen (`03-models-ollama.sh` — qwen3:14b, gemma4:e4b, qwen3:8b, llama3.1:8b)
 - [ ] Open WebUI starten (`06-open-webui.sh` — bereikbaar op `:3000`)
 - [ ] Hermes Agent installeren (`04-hermes-agent.sh` — SOUL.md + basis geheugen)
 - [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief, zie `05-hermes-honcho-codex-claude.md`)

@@ -6,8 +6,7 @@ Windows 11 blijft de primaire hostlaag voor:
 
 - drivers
 - GPU ondersteuning
-- Docker Desktop
-- WSL2
+- WSL2 (Docker CE draait native in WSL2, niet via Docker Desktop)
 - zakelijke desktop tooling
 - lokale beheeracties
 

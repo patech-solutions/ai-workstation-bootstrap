@@ -22,7 +22,7 @@ hermes setup
 # → Matrix als platform
 # → custom provider (Ollama)
 # → Base URL: http://localhost:11434/v1
-# → Default model: qwen3-30b:iq2xxs
+# → Default model: qwen3:14b
 
 hermes memory setup
 # → honcho
@@ -86,7 +86,7 @@ Dit script:
 
 ### Configuratie
 
-Honcho gebruikt Ollama via OpenAI-compatibele API. Alle LLM-taken (summary, dream, dialectic) draaien op `qwen3-30b:iq2xxs` — hetzelfde model als Hermes, zodat het warm blijft in VRAM.
+Honcho gebruikt Ollama via OpenAI-compatibele API. Alle LLM-taken (summary, dream, dialectic) draaien op `qwen3:14b` — hetzelfde model als Hermes, zodat het warm blijft in VRAM.
 
 Embeddings lopen via `nomic-embed-text` (274 MB bestand, ~595 MB VRAM, 768 dimensies).
 
@@ -96,18 +96,18 @@ Sleutelconfiguratie in `.env`:
 |---|---|---|
 | `LLM_OPENAI_API_KEY` | `ollama` | Ollama accepteert elke waarde als API key |
 | `EMBED_MESSAGES` | `false` | Geen berichtembeddings; alleen representaties |
-| `EMBEDDING_MODEL_CONFIG__MODEL` | `nomic-embed-text` | Past in VRAM naast qwen3-30b |
+| `EMBEDDING_MODEL_CONFIG__MODEL` | `nomic-embed-text` | Past in VRAM naast qwen3:14b |
 | `EMBEDDING_VECTOR_DIMENSIONS` | `768` | Dimensies van nomic-embed-text |
 | `DERIVER_FLUSH_ENABLED` | `false` | Deriver uitgeschakeld (zie sectie Deriver) |
 | `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
 | `DERIVER_DEDUPLICATE` | `true` | Dedupliceert conclusions binnen een deriver-run |
 | `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit |
 | `DREAM_MIN_HOURS_BETWEEN_DREAMS` | `4` | Maximaal één Dream-cyclus per 4 uur |
-| Alle `*_MODEL_CONFIG__MODEL` | `qwen3-30b:iq2xxs` | Één model in VRAM, geen evictie |
+| Alle `*_MODEL_CONFIG__MODEL` | `qwen3:14b` | Één model in VRAM, geen evictie |
 
 ### Deriver
 
-**De deriver is uitgeschakeld.** Reden: `qwen3-30b:iq2xxs` hallucineerde persoonlijke data (leeftijd, woonplaats, huisdier, geboortedatum). Conclusies worden uitsluitend via de `honcho_conclude` tool (Atlas) opgeslagen.
+**De deriver is uitgeschakeld.** Reden: hallucineerde persoonlijke data (leeftijd, woonplaats, huisdier, geboortedatum) tijdens eerdere evaluatie. Conclusies worden uitsluitend via de `honcho_conclude` tool (Atlas) opgeslagen.
 
 Technische kanttekening: `DERIVER_ENABLED=false` in `.env` wordt **niet** gelezen door de Honcho broncode. De deriver moet als container worden gestopt. Het installatiescript regelt dit via `docker-compose.override.yml`:
 
@@ -133,11 +133,11 @@ Alle Ollama-aanroepen vanuit Docker gaan via `host.docker.internal:11434` (= `17
 
 | Component | VRAM |
 |---|---|
-| qwen3-30b:iq2xxs | ~11.0 GB |
+| qwen3:14b | ~9.3 GB |
 | nomic-embed-text | ~0.6 GB |
-| **Totaal** | **~11.6 GB van 12.2 GB** |
+| **Totaal** | **~9.9 GB van 12.2 GB** |
 
-Met een tweede model (bijv. qwen3:14b = 10 GB) zou qwen3-30b uit VRAM worden gezet.
+KV-cache (num_ctx 8192): ~0.5 GB extra. Totaal ~10.4 GB — past binnen 12 GB zonder model-evictie.
 
 ### DB-vectordimensies
 
