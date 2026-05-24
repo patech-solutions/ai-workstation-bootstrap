@@ -51,10 +51,10 @@ set_env EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal
 set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
 # Deriver — uitgeschakeld: qwen3-30b:iq2xxs hallucineerde persoonlijke data.
+# Deriver/Summary/Dream draaien op qwen3:14b (alleen bij inactiviteit, eviction acceptabel).
 # Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
-# Configuratie blijft staan voor toekomstig herinschakelen.
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
-set_env DERIVER_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
+set_env DERIVER_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
 set_env DERIVER_FLUSH_ENABLED "false"
@@ -66,21 +66,22 @@ set_env DREAM_MIN_HOURS_BETWEEN_DREAMS "4"
 
 # Summary
 set_env SUMMARY_MODEL_CONFIG__TRANSPORT "openai"
-set_env SUMMARY_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
+set_env SUMMARY_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env SUMMARY_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
 # Dream — geheugenconsolidatie op de achtergrond
 set_env DREAM_DEDUCTION_MODEL_CONFIG__TRANSPORT "openai"
-set_env DREAM_DEDUCTION_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
+set_env DREAM_DEDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DREAM_DEDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DREAM_INDUCTION_MODEL_CONFIG__TRANSPORT "openai"
-set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3-30b:iq2xxs"
+set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DREAM_INDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
-# Dialectic — zelfde model als Hermes zodat het warm blijft in VRAM
+# Dialectic — zelfde model als primair Hermes-model zodat het warm blijft in VRAM
+# Huidig primair model: phi4:14b
 for level in minimal low medium high max; do
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__TRANSPORT" "openai"
-  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "qwen3-30b:iq2xxs"
+  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "phi4:14b"
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__OVERRIDES__BASE_URL" "http://host.docker.internal:11434/v1"
 done
 
