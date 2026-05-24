@@ -30,9 +30,25 @@ context_lengths:
   llama3.1:8b@http://localhost:11434/v1/: 131072
   phi4:14b@http://localhost:11434/v1: 131072
   phi4:14b@http://localhost:11434/v1/: 131072
+  phi4-tools:14b@http://localhost:11434/v1: 131072
+  phi4-tools:14b@http://localhost:11434/v1/: 131072
   aya-expanse:8b@http://localhost:11434/v1: 131072
   aya-expanse:8b@http://localhost:11434/v1/: 131072
 EOF
+
+# phi4-tools:14b — custom Modelfile met tool-support (phi4:14b ondersteunt tools niet standaard)
+echo "-- phi4-tools:14b Modelfile bouwen --"
+MODELFILE_SRC="$CONFIG_DIR/modelfiles/phi4-tools.Modelfile"
+if ollama list 2>/dev/null | grep -q "^phi4-tools:14b"; then
+    echo "   phi4-tools:14b bestaat al — overgeslagen"
+else
+    if [[ -f "$MODELFILE_SRC" ]]; then
+        ollama create phi4-tools:14b -f "$MODELFILE_SRC"
+        echo "   phi4-tools:14b aangemaakt"
+    else
+        echo "   WAARSCHUWING: $MODELFILE_SRC niet gevonden — phi4-tools:14b niet aangemaakt"
+    fi
+fi
 
 # honcho.json — altijd vanuit repo installeren (bevat pinPeerName en peer config)
 echo "-- honcho.json installeren --"

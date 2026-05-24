@@ -1,8 +1,11 @@
 # PaTech AI Workstation — Ollama modellen
 # Volgorde: standaardmodel eerst (grootste prioriteit voor VRAM-warmte)
 
-# Primair model — altijd warm in VRAM (~10GB, IQ2 quantisatie)
-qwen3-30b:iq2xxs
+# Primair model — phi4:14b als basis voor phi4-tools:14b (custom Modelfile met tool-support)
+phi4:14b
+
+# qwen3-30b:iq2xxs — goed model, maar 8192-token KV-limiet problematisch bij langere sessies
+# qwen3-30b:iq2xxs
 
 # Achtergrondverwerking (Honcho deriver/summary/dream) + fallback
 qwen3:14b
