@@ -60,44 +60,7 @@ fi
 cp "$CONFIG_DIR/config.yaml" "$CONFIG_YAML_DST"
 echo "   config.yaml geïnstalleerd"
 
-# patch_yaml — idempotent YAML-sleutel patcher (voor geneste sleutels als honcho.contextTokens)
-# Gebruik: patch_yaml <bestand> <ouder_sleutel> <kind_sleutel> <waarde>
-patch_yaml() {
-  local file="$1" parent="$2" child="$3" value="$4"
-  python3 - "$file" "$parent" "$child" "$value" <<'PYEOF'
-import sys, re
-
-file, parent, child, value = sys.argv[1:]
-
-with open(file, encoding="utf-8") as f:
-    text = f.read()
-
-# Probeer bestaande child-sleutel onder parent te vervangen
-pattern = rf"(?m)(^{re.escape(parent)}:\s*\n(?:[ \t]+[^\n]*\n)*?[ \t]+{re.escape(child)}:\s*)(\S+)"
-replacement = lambda m: m.group(1) + value
-new_text = re.sub(pattern, replacement, text)
-
-if new_text == text:
-    # Voeg child toe onder parent als parent bestaat maar child niet
-    parent_pattern = rf"(?m)^({re.escape(parent)}:)([ \t]*)\n"
-    def add_child(m):
-        return f"{m.group(1)}\n  {child}: {value}\n"
-    new_text = re.sub(parent_pattern, add_child, text, count=1)
-
-if new_text != text:
-    with open(file, "w", encoding="utf-8") as f:
-        f.write(new_text)
-    print(f"   {parent}.{child} = {value}")
-else:
-    print(f"   {parent}.{child} ongewijzigd (al correct of parent niet gevonden)")
-PYEOF
-}
-
-# Kritieke instellingen garanderen (zelfs als config.yaml handmatig gewijzigd is)
-echo "-- kritieke config.yaml instellingen patchen --"
-patch_yaml "$CONFIG_YAML_DST" "honcho" "contextTokens" "3000"
-
-# honcho.json — altijd vanuit repo installeren (bevat pinPeerName en peer config)
+# honcho.json — altijd vanuit repo installeren (bevat pinPeerName, peer config én contextTokens)
 echo "-- honcho.json installeren --"
 HONCHO_DST="$HOME/.hermes/honcho.json"
 if [[ -f "$HONCHO_DST" ]]; then
