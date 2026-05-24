@@ -78,10 +78,10 @@ set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DREAM_INDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
 # Dialectic — zelfde model als primair Hermes-model zodat het warm blijft in VRAM
-# Huidig primair model: phi4-tools:14b
+# Huidig primair model: qwen3:14b
 for level in minimal low medium high max; do
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__TRANSPORT" "openai"
-  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "phi4-tools:14b"
+  set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "qwen3:14b"
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__OVERRIDES__BASE_URL" "http://host.docker.internal:11434/v1"
 done
 

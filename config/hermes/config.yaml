@@ -1,11 +1,12 @@
 model:
   base_url: http://localhost:11434/v1
-  default: phi4-tools:14b
+  default: qwen3:14b
   provider: custom
+  ollama_num_ctx: 8192
 providers: {}
 fallback_providers:
 - base_url: http://localhost:11434/v1
-  model: qwen3:14b
+  model: qwen3:8b
   provider: custom
 credential_pool_strategies: {}
 toolsets:

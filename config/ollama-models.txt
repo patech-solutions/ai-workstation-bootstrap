@@ -1,14 +1,14 @@
 # PaTech AI Workstation — Ollama modellen
 # Volgorde: standaardmodel eerst (grootste prioriteit voor VRAM-warmte)
 
-# Primair model — phi4:14b als basis voor phi4-tools:14b (custom Modelfile met tool-support)
-phi4:14b
+# Primair model — qwen3:14b (tool-support, gebalanceerd conversatie/tools, ollama_num_ctx 8192 via config.yaml)
+qwen3:14b
 
-# qwen3-30b:iq2xxs — goed model, maar 8192-token KV-limiet problematisch bij langere sessies
+# qwen3-30b:iq2xxs — goed model, maar KV-limiet problematisch bij Hermes-promptgrootte
 # qwen3-30b:iq2xxs
 
-# Achtergrondverwerking (Honcho deriver/summary/dream) + fallback
-qwen3:14b
+# Fallback + Honcho deriver/summary/dream
+# qwen3:8b
 
 # Vision / afbeeldingsanalyse
 gemma4:e4b

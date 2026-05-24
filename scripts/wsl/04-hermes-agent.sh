@@ -28,24 +28,9 @@ context_lengths:
   qwen3:8b@http://localhost:11434/v1/: 131072
   llama3.1:8b@http://localhost:11434/v1: 131072
   llama3.1:8b@http://localhost:11434/v1/: 131072
-  phi4:14b@http://localhost:11434/v1: 131072
-  phi4:14b@http://localhost:11434/v1/: 131072
-  phi4-tools:14b@http://localhost:11434/v1: 131072
-  phi4-tools:14b@http://localhost:11434/v1/: 131072
   aya-expanse:8b@http://localhost:11434/v1: 131072
   aya-expanse:8b@http://localhost:11434/v1/: 131072
 EOF
-
-# phi4-tools:14b — custom Modelfile met tool-support en num_ctx 8192
-# Altijd herbouwen: Modelfile-wijzigingen (num_ctx, template) worden anders overgeslagen.
-echo "-- phi4-tools:14b Modelfile bouwen --"
-MODELFILE_SRC="$CONFIG_DIR/modelfiles/phi4-tools.Modelfile"
-if [[ -f "$MODELFILE_SRC" ]]; then
-    ollama create phi4-tools:14b -f "$MODELFILE_SRC"
-    echo "   phi4-tools:14b gebouwd"
-else
-    echo "   WAARSCHUWING: $MODELFILE_SRC niet gevonden — phi4-tools:14b niet aangemaakt"
-fi
 
 # config.yaml — altijd vanuit repo installeren (bevat alle gateway-instellingen)
 # Bevat geen credentials (die staan in ~/.hermes/.env).
