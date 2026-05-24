@@ -64,6 +64,27 @@ fi
 cp "$CONFIG_DIR/honcho.json" "$HONCHO_DST"
 echo "   honcho.json geïnstalleerd"
 
+# Honcho client.py patch: per-session strategie bypassed gateway_session_key zodat
+# !new in Matrix een nieuwe Honcho sessie aanmaakt (session_id uit sessions.json).
+echo "-- honcho client.py patchen (per-session gateway bypass) --"
+python3 - << 'PYEOF'
+import pathlib
+p = pathlib.Path.home() / '.hermes/hermes-agent/plugins/memory/honcho/client.py'
+if not p.exists():
+    print("   WAARSCHUWING: client.py niet gevonden, patch overgeslagen")
+    exit(0)
+old = p.read_text()
+old_str = 'if gateway_session_key:'
+new_str = 'if gateway_session_key and self.session_strategy != "per-session":'
+if new_str in old:
+    print("   patch al aanwezig")
+elif old_str in old:
+    p.write_text(old.replace(old_str, new_str, 1))
+    print("   patch toegepast")
+else:
+    print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
+PYEOF
+
 # SOUL.md — altijd vanuit repo installeren (is configuratie, geen data)
 # Bestaande versie wordt gebackupt zodat niets verloren gaat
 echo "-- SOUL.md installeren --"
