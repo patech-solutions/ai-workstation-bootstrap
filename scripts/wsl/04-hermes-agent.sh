@@ -36,19 +36,66 @@ context_lengths:
   aya-expanse:8b@http://localhost:11434/v1/: 131072
 EOF
 
-# phi4-tools:14b — custom Modelfile met tool-support (phi4:14b ondersteunt tools niet standaard)
+# phi4-tools:14b — custom Modelfile met tool-support en num_ctx 8192
+# Altijd herbouwen: Modelfile-wijzigingen (num_ctx, template) worden anders overgeslagen.
 echo "-- phi4-tools:14b Modelfile bouwen --"
 MODELFILE_SRC="$CONFIG_DIR/modelfiles/phi4-tools.Modelfile"
-if ollama list 2>/dev/null | grep -q "^phi4-tools:14b"; then
-    echo "   phi4-tools:14b bestaat al — overgeslagen"
+if [[ -f "$MODELFILE_SRC" ]]; then
+    ollama create phi4-tools:14b -f "$MODELFILE_SRC"
+    echo "   phi4-tools:14b gebouwd"
 else
-    if [[ -f "$MODELFILE_SRC" ]]; then
-        ollama create phi4-tools:14b -f "$MODELFILE_SRC"
-        echo "   phi4-tools:14b aangemaakt"
-    else
-        echo "   WAARSCHUWING: $MODELFILE_SRC niet gevonden — phi4-tools:14b niet aangemaakt"
-    fi
+    echo "   WAARSCHUWING: $MODELFILE_SRC niet gevonden — phi4-tools:14b niet aangemaakt"
 fi
+
+# config.yaml — altijd vanuit repo installeren (bevat alle gateway-instellingen)
+# Bevat geen credentials (die staan in ~/.hermes/.env).
+# Kritieke instellingen worden ook via patch_yaml gegarandeerd (idempotent).
+echo "-- config.yaml installeren --"
+CONFIG_YAML_DST="$HOME/.hermes/config.yaml"
+if [[ -f "$CONFIG_YAML_DST" ]]; then
+    BACKUP="${CONFIG_YAML_DST}.bak.$(date +%Y%m%d_%H%M%S)"
+    cp "$CONFIG_YAML_DST" "$BACKUP"
+    echo "   bestaande config.yaml gebackupt naar: $BACKUP"
+fi
+cp "$CONFIG_DIR/config.yaml" "$CONFIG_YAML_DST"
+echo "   config.yaml geïnstalleerd"
+
+# patch_yaml — idempotent YAML-sleutel patcher (voor geneste sleutels als honcho.contextTokens)
+# Gebruik: patch_yaml <bestand> <ouder_sleutel> <kind_sleutel> <waarde>
+patch_yaml() {
+  local file="$1" parent="$2" child="$3" value="$4"
+  python3 - "$file" "$parent" "$child" "$value" <<'PYEOF'
+import sys, re
+
+file, parent, child, value = sys.argv[1:]
+
+with open(file, encoding="utf-8") as f:
+    text = f.read()
+
+# Probeer bestaande child-sleutel onder parent te vervangen
+pattern = rf"(?m)(^{re.escape(parent)}:\s*\n(?:[ \t]+[^\n]*\n)*?[ \t]+{re.escape(child)}:\s*)(\S+)"
+replacement = lambda m: m.group(1) + value
+new_text = re.sub(pattern, replacement, text)
+
+if new_text == text:
+    # Voeg child toe onder parent als parent bestaat maar child niet
+    parent_pattern = rf"(?m)^({re.escape(parent)}:)([ \t]*)\n"
+    def add_child(m):
+        return f"{m.group(1)}\n  {child}: {value}\n"
+    new_text = re.sub(parent_pattern, add_child, text, count=1)
+
+if new_text != text:
+    with open(file, "w", encoding="utf-8") as f:
+        f.write(new_text)
+    print(f"   {parent}.{child} = {value}")
+else:
+    print(f"   {parent}.{child} ongewijzigd (al correct of parent niet gevonden)")
+PYEOF
+}
+
+# Kritieke instellingen garanderen (zelfs als config.yaml handmatig gewijzigd is)
+echo "-- kritieke config.yaml instellingen patchen --"
+patch_yaml "$CONFIG_YAML_DST" "honcho" "contextTokens" "3000"
 
 # honcho.json — altijd vanuit repo installeren (bevat pinPeerName en peer config)
 echo "-- honcho.json installeren --"
