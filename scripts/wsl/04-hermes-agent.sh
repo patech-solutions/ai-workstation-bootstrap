@@ -14,6 +14,14 @@ curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scri
 echo "-- faster-whisper installeren --"
 uv pip install faster-whisper --python "$HOME/.hermes/hermes-agent/venv/bin/python"
 
+# qwen3:14b Modelfile bouwen — PARAMETER num_ctx 8192 zodat Ollama altijd 8192 alloceert,
+# ook bij aanroepen vanuit Honcho Docker (die geen num_ctx meesturen).
+echo "-- qwen3:14b Modelfile bouwen --"
+mkdir -p "$HOME/.hermes/modelfiles"
+cp "$CONFIG_DIR/modelfiles/qwen3-14b.Modelfile" "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
+ollama create qwen3:14b -f "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
+echo "   qwen3:14b gebouwd met num_ctx 8192"
+
 # Context length cache (Hermes vereist >=64K, Ollama rapporteert 40960)
 echo "-- context_length_cache.yaml instellen --"
 cat > "$HOME/.hermes/context_length_cache.yaml" <<'EOF'
