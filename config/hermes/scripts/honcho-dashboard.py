@@ -206,6 +206,115 @@ def api_peer_detail(pid):
     }
 
 
+def api_delete_conclusions_bulk(observer=None, observed=None):
+    ids = []
+    page = 1
+    while True:
+        body = {"size": 100}
+        filters = {}
+        if observer:
+            filters["observer_id"] = observer
+        if observed:
+            filters["observed_id"] = observed
+        if filters:
+            body["filters"] = filters
+        data = hpost(f"/v3/workspaces/{WORKSPACE}/conclusions/list?page={page}&size=100", body)
+        ids.extend(i["id"] for i in data.get("items", []))
+        if page >= data.get("pages", 1):
+            break
+        page += 1
+    deleted = 0
+    for cid in ids:
+        req = urllib.request.Request(
+            f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/conclusions/{urllib.parse.quote(cid, safe='')}",
+            method="DELETE",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10):
+                deleted += 1
+        except Exception:
+            pass
+    return {"deleted": deleted, "total": len(ids)}
+
+
+def api_delete_session(sid):
+    req = urllib.request.Request(
+        f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/sessions/{urllib.parse.quote(sid, safe='')}",
+        method="DELETE",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return {"ok": True, "status": r.status}
+    except urllib.error.HTTPError as e:
+        return {"ok": False, "status": e.code}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def api_delete_session_messages_range(sid, from_pos, to_pos):
+    import time as _time
+    # 1. Fetch all messages
+    all_msgs = []
+    page = 1
+    while True:
+        data = hpost(f"/v3/workspaces/{WORKSPACE}/sessions/{sid}/messages/list",
+                     {"size": 200, "page": page})
+        all_msgs.extend(data.get("items", []))
+        if page >= data.get("pages", 1):
+            break
+        page += 1
+    total = len(all_msgs)
+    # Convert to 0-based indices
+    lo = max(0, from_pos - 1)
+    hi = min(total - 1, to_pos - 1)
+    keep = [m for i, m in enumerate(all_msgs) if i < lo or i > hi]
+    removed = total - len(keep)
+    # 2. Delete session
+    del_req = urllib.request.Request(
+        f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/sessions/{urllib.parse.quote(sid, safe='')}",
+        method="DELETE",
+    )
+    try:
+        with urllib.request.urlopen(del_req, timeout=10):
+            pass
+    except Exception as e:
+        return {"ok": False, "error": f"Sessie verwijderen mislukt: {e}"}
+    _time.sleep(0.3)
+    # 3. Recreate session with same ID
+    create_body = json.dumps({"id": sid}).encode()
+    create_req = urllib.request.Request(
+        f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/sessions",
+        data=create_body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(create_req, timeout=10):
+            pass
+    except Exception as e:
+        return {"ok": False, "error": f"Sessie heraanmaken mislukt: {e}"}
+    # 4. Re-add kept messages
+    added = 0
+    for msg in keep:
+        msg_body = json.dumps({
+            "content":    msg.get("content", ""),
+            "peer_id":    msg.get("peer_id", ""),
+            "created_at": msg.get("created_at"),
+        }).encode()
+        msg_req = urllib.request.Request(
+            f"{HONCHO_URL}/v3/workspaces/{WORKSPACE}/sessions/{urllib.parse.quote(sid, safe='')}/messages",
+            data=msg_body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(msg_req, timeout=10):
+                added += 1
+        except Exception:
+            pass
+    return {"ok": True, "removed": removed, "kept": len(keep), "readded": added, "total": total}
+
+
 # ── HTML ─────────────────────────────────────────────────────────────────────
 
 HTML = r"""<!DOCTYPE html>
@@ -303,6 +412,9 @@ select:focus,input:focus{outline:none;border-color:var(--accent);}
 .doc-del{position:absolute;top:10px;right:0;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 7px;border-radius:4px;transition:all .15s;}
 .doc-del:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.08);}
 .doc-del.confirm{color:var(--red);border-color:var(--red);font-weight:600;}
+.del-btn{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.3);color:var(--red);}
+.del-btn:hover{background:rgba(239,68,68,.15);border-color:var(--red);}
+.del-btn.confirm{background:rgba(239,68,68,.2);border-color:var(--red);font-weight:600;}
 .search-wrap{position:relative;flex:1;min-width:180px;max-width:340px;}
 .search-wrap input{width:100%;padding-right:28px;}
 .search-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0;}
@@ -377,6 +489,8 @@ select:focus,input:focus{outline:none;border-color:var(--accent);}
       </div>
       <select id="obs-observer" onchange="loadDocs()"><option value="">Alle observers</option></select>
       <select id="obs-observed" onchange="loadDocs()"><option value="">Alle observed</option></select>
+      <button class="btn del-btn" id="del-filtered-btn" onclick="deleteFiltered()">Verwijder gefilterd</button>
+      <button class="btn del-btn" id="del-all-btn" onclick="deleteAllConclusions()">Verwijder alles</button>
       <span id="doc-total" style="color:var(--muted);font-size:12px;margin-left:4px;"></span>
     </div>
     <div id="search-info" class="search-info" style="display:none"></div>
@@ -543,7 +657,16 @@ async function loadMessages(sid, page) {
 
   $('msg-panel').innerHTML = `
     <span class="msg-back" onclick="closeSession()">← Terug naar sessies</span>
-    <h3 style="margin-bottom:14px">${esc(sid)}</h3>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <h3 style="margin:0">${esc(sid)}</h3>
+      <button class="btn del-btn" id="del-session-btn" onclick="deleteSession('${esc(sid)}')">Verwijder sessie</button>
+      <span style="color:var(--border)">|</span>
+      <input type="number" id="range-from" placeholder="van" min="1" style="width:64px">
+      <span style="color:var(--muted);font-size:12px">t/m</span>
+      <input type="number" id="range-to" placeholder="t/m" min="1" style="width:64px">
+      <button class="btn del-btn" id="del-range-btn" onclick="deleteMessageRange('${esc(sid)}')">Verwijder reeks</button>
+      <span id="range-total" style="color:var(--muted);font-size:11px">${data.total} berichten</span>
+    </div>
     ${msgs}${pager}`;
 }
 
@@ -694,6 +817,82 @@ function updateDocTotal(delta) {
   const el = $('doc-total');
   const m = el.textContent.match(/(\d+)/);
   if (m) el.textContent = el.textContent.replace(m[0], Math.max(0, parseInt(m[0]) + delta));
+}
+
+// ─── Bulk delete (conclusions) ────────────────────────────────────────────────
+async function deleteFiltered() {
+  const btn = $('del-filtered-btn');
+  if (btn.dataset.confirm !== '1') {
+    const obs  = $('obs-observer').value;
+    const obsd = $('obs-observed').value;
+    const label = (obs || obsd) ? `Zeker? (${[obs,obsd].filter(Boolean).join(' / ')})` : 'Zeker? (alle)';
+    btn.dataset.confirm = '1'; btn.textContent = label; btn.classList.add('confirm');
+    setTimeout(() => { if (btn.dataset.confirm==='1') { btn.dataset.confirm=''; btn.textContent='Verwijder gefilterd'; btn.classList.remove('confirm'); }}, 5000);
+    return;
+  }
+  btn.dataset.confirm = ''; btn.textContent = '…'; btn.disabled = true;
+  const obs  = encodeURIComponent($('obs-observer').value || '');
+  const obsd = encodeURIComponent($('obs-observed').value || '');
+  const res  = await fetch(`/api/conclusions/bulk?observer=${obs}&observed=${obsd}`, {method:'DELETE'});
+  const d    = await res.json();
+  btn.textContent = `✓ ${d.deleted} verwijderd`;
+  setTimeout(() => { btn.textContent='Verwijder gefilterd'; btn.disabled=false; btn.classList.remove('confirm'); }, 3000);
+  docState.page = 1; loadDocs();
+}
+
+async function deleteAllConclusions() {
+  const btn = $('del-all-btn');
+  if (btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1'; btn.textContent = 'Zeker? ALLES!'; btn.classList.add('confirm');
+    setTimeout(() => { if (btn.dataset.confirm==='1') { btn.dataset.confirm=''; btn.textContent='Verwijder alles'; btn.classList.remove('confirm'); }}, 5000);
+    return;
+  }
+  btn.dataset.confirm = ''; btn.textContent = '…'; btn.disabled = true;
+  const res = await fetch('/api/conclusions/bulk?all=true', {method:'DELETE'});
+  const d   = await res.json();
+  btn.textContent = `✓ ${d.deleted} verwijderd`;
+  setTimeout(() => { btn.textContent='Verwijder alles'; btn.disabled=false; btn.classList.remove('confirm'); }, 3000);
+  docState.page = 1; loadDocs();
+}
+
+// ─── Session / message range delete ──────────────────────────────────────────
+async function deleteSession(sid) {
+  const btn = $('del-session-btn');
+  if (btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1'; btn.textContent = 'Zeker?'; btn.classList.add('confirm');
+    setTimeout(() => { if (btn.dataset.confirm==='1') { btn.dataset.confirm=''; btn.textContent='Verwijder sessie'; btn.classList.remove('confirm'); }}, 5000);
+    return;
+  }
+  btn.dataset.confirm = ''; btn.textContent = '…'; btn.disabled = true;
+  const res = await fetch(`/api/sessions/${encodeURIComponent(sid)}`, {method:'DELETE'});
+  const d   = await res.json();
+  if (d.ok) { closeSession(); load(); }
+  else { btn.textContent='Fout'; btn.disabled=false; setTimeout(()=>{ btn.textContent='Verwijder sessie'; btn.classList.remove('confirm'); },2000); }
+}
+
+async function deleteMessageRange(sid) {
+  const from = parseInt($('range-from')?.value||'0');
+  const to   = parseInt($('range-to')?.value||'0');
+  if (!from || !to || from > to) { alert('Geef een geldig bereik op (van ≤ t/m, beide > 0).'); return; }
+  const btn = $('del-range-btn');
+  if (btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1'; btn.textContent = `Zeker? (${from}–${to})`; btn.classList.add('confirm');
+    setTimeout(() => { if (btn.dataset.confirm==='1') { btn.dataset.confirm=''; btn.textContent='Verwijder reeks'; btn.classList.remove('confirm'); }}, 5000);
+    return;
+  }
+  btn.dataset.confirm = ''; btn.textContent = '…'; btn.disabled = true;
+  const res = await fetch(`/api/sessions/${encodeURIComponent(sid)}/messages/delete-range`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({from,to}),
+  });
+  const d = await res.json();
+  if (d.ok) {
+    btn.textContent = `✓ ${d.removed} verwijderd`;
+    setTimeout(()=>{ btn.textContent='Verwijder reeks'; btn.disabled=false; btn.classList.remove('confirm'); },3000);
+    loadMessages(sid, 1);
+  } else {
+    btn.textContent = 'Fout: '+(d.error||'?'); btn.disabled=false;
+    setTimeout(()=>{ btn.textContent='Verwijder reeks'; btn.classList.remove('confirm'); },3000);
+  }
 }
 
 // ─── Peers ───────────────────────────────────────────────────────────────────
@@ -956,7 +1155,22 @@ class Handler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         parsed = urllib.parse.urlparse(self.path)
         path   = parsed.path
-        if path.startswith("/api/conclusions/"):
+        qs     = urllib.parse.parse_qs(parsed.query)
+
+        def qp(key, default=""):
+            return qs.get(key, [default])[0]
+
+        if path == "/api/conclusions/bulk":
+            if qp("all", "false").lower() == "true":
+                result = api_delete_conclusions_bulk()
+            else:
+                result = api_delete_conclusions_bulk(
+                    observer=qp("observer") or None,
+                    observed=qp("observed") or None,
+                )
+            self.send_json(result)
+
+        elif path.startswith("/api/conclusions/"):
             cid = urllib.parse.unquote(path[len("/api/conclusions/"):])
             try:
                 req = urllib.request.Request(
@@ -973,6 +1187,36 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 self.send_response(500)
                 self.end_headers()
+
+        elif path.startswith("/api/sessions/"):
+            parts = path.split("/")
+            # /api/sessions/{sid} — exact 4 parts
+            if len(parts) == 4:
+                sid = urllib.parse.unquote(parts[3])
+                result = api_delete_session(sid)
+                self.send_json(result, status=200 if result.get("ok") else 500)
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        path   = parsed.path
+        parts  = path.split("/")
+        # /api/sessions/{sid}/messages/delete-range → ['','api','sessions',sid,'messages','delete-range']
+        if (len(parts) == 6 and parts[1] == "api" and parts[2] == "sessions"
+                and parts[4] == "messages" and parts[5] == "delete-range"):
+            sid    = urllib.parse.unquote(parts[3])
+            length = int(self.headers.get("Content-Length", 0))
+            body   = json.loads(self.rfile.read(length)) if length else {}
+            result = api_delete_session_messages_range(
+                sid, int(body.get("from", 1)), int(body.get("to", 1))
+            )
+            self.send_json(result)
         else:
             self.send_response(404)
             self.end_headers()
