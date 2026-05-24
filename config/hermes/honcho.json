@@ -12,7 +12,8 @@
       "sessionStrategy": "per-session",
       "pinPeerName": true,
       "enabled": true,
-      "saveMessages": true
+      "saveMessages": true,
+      "contextTokens": 3000
     }
   },
   "baseUrl": "http://localhost:8000"

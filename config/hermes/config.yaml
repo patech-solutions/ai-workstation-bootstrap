@@ -392,8 +392,7 @@ curator:
   backup:
     enabled: true
     keep: 5
-honcho:
-  contextTokens: 3000
+honcho: {}
 timezone: ''
 slack:
   require_mention: true
