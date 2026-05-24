@@ -31,6 +31,10 @@ Thumbs.db
 # Temp files
 *.tmp
 *.bak
+
+# Local-only AI work (niet gesynchroniseerd)
+00-inbox/
+06-ai-memory/
 EOF
 
 git add .
@@ -39,6 +43,14 @@ if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
   git commit -m "Initial PaTech AI workspace"
 else
   git commit -m "Update workspace structure" || true
+fi
+
+# Remote instellen vanuit env of standaard Gitea-locatie
+GITEA_REMOTE="${OBSIDIAN_GIT_REMOTE:-http://ugreendxp2800.local:3000/Paikke/ai-workspace.git}"
+if ! git remote get-url origin >/dev/null 2>&1; then
+  git remote add origin "$GITEA_REMOTE"
+  echo "Remote ingesteld: $GITEA_REMOTE"
+  echo "Opmerking: push vereist Gitea-token in ~/.git-credentials (credential.helper=store)"
 fi
 
 echo "Git initialized."
