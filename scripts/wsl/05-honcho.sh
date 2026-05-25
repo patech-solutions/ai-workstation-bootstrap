@@ -43,15 +43,15 @@ set_env() {
 # LLM provider: Ollama via OpenAI-compatible API
 set_env LLM_OPENAI_API_KEY "ollama"
 
-# Embeddings via Ollama — nomic-embed-text (274 MB, past naast qwen3-30b:iq2xxs in VRAM)
+# Embeddings via Ollama — nomic-embed-text (274 MB, past naast qwen3:14b in VRAM)
 set_env EMBED_MESSAGES "false"
 set_env EMBEDDING_MODEL_CONFIG__TRANSPORT "openai"
 set_env EMBEDDING_MODEL_CONFIG__MODEL "nomic-embed-text"
 set_env EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
-# Deriver — uitgeschakeld: qwen3-30b:iq2xxs hallucineerde persoonlijke data.
-# Deriver/Summary/Dream draaien op qwen3:14b (alleen bij inactiviteit, eviction acceptabel).
+# Deriver — uitgeschakeld: hallucineerde persoonlijke data.
+# Deriver/Summary/Dream draaien op qwen3:14b (alleen bij inactiviteit).
 # Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
 set_env DERIVER_MODEL_CONFIG__MODEL "qwen3:14b"
@@ -77,8 +77,7 @@ set_env DREAM_INDUCTION_MODEL_CONFIG__TRANSPORT "openai"
 set_env DREAM_INDUCTION_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DREAM_INDUCTION_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 
-# Dialectic — zelfde model als primair Hermes-model zodat het warm blijft in VRAM
-# Huidig primair model: qwen3:14b
+# Dialectic — zelfde model als primair Hermes-model (qwen3:14b) zodat het warm blijft in VRAM
 for level in minimal low medium high max; do
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__TRANSPORT" "openai"
   set_env "DIALECTIC_LEVELS__${level}__MODEL_CONFIG__MODEL" "qwen3:14b"
@@ -89,13 +88,20 @@ done
 set_env VECTOR_STORE_TYPE "pgvector"
 set_env VECTOR_STORE_MIGRATED "false"
 
+# docker compose plugin bereikbaar maken via ~/.docker/cli-plugins symlink
+mkdir -p "$HOME/.docker/cli-plugins"
+if [ ! -L "$HOME/.docker/cli-plugins/docker-compose" ] && [ -x "/usr/libexec/docker/cli-plugins/docker-compose" ]; then
+  ln -sf /usr/libexec/docker/cli-plugins/docker-compose "$HOME/.docker/cli-plugins/docker-compose"
+  echo "docker compose plugin symlink aangemaakt"
+fi
+
 docker compose up -d --build
 
 # Deriver uitschakelen via override — voorkomt automatisch herstarten na reboot
 OVERRIDE_FILE="$HONCHO_DIR/docker-compose.override.yml"
 if [ ! -f "$OVERRIDE_FILE" ]; then
   cat > "$OVERRIDE_FILE" << 'EOF'
-# Deriver uitgeschakeld: qwen3-30b:iq2xxs hallucineerde te veel persoonlijke data.
+# Deriver uitgeschakeld: hallucineert persoonlijke data.
 # Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
 # Herinschakelen: verwijder dit bestand of wijzig restart naar 'unless-stopped'.
 services:
@@ -105,11 +111,8 @@ EOF
   echo "docker-compose.override.yml aangemaakt (deriver disabled)"
 fi
 
-DOCKER_COMPOSE="/usr/libexec/docker/cli-plugins/docker-compose"
-if [ -x "$DOCKER_COMPOSE" ]; then
-  "$DOCKER_COMPOSE" -f docker-compose.yml -f docker-compose.override.yml stop deriver 2>/dev/null || true
-  echo "Deriver container gestopt"
-fi
+docker compose -f docker-compose.yml -f docker-compose.override.yml stop deriver 2>/dev/null || true
+echo "Deriver container gestopt"
 
 # Honcho dashboard — script vanuit repo installeren
 DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"
