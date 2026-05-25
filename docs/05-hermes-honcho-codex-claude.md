@@ -92,6 +92,18 @@ Honcho gebruikt Ollama via OpenAI-compatibele API. Alle LLM-taken (summary, drea
 
 Embeddings lopen via `nomic-embed-text` (274 MB bestand, ~595 MB VRAM, 768 dimensies).
 
+#### recallMode en dialecticCadence
+
+`honcho.json` gebruikt `recallMode: "hybrid"`. Dit combineert:
+- **Session-start prewarm**: bij elke `!new` sessie start een achtergrond-thread die automatisch de Honcho dialectic aanroept en de context injecteert in het eerste antwoord — zonder dat de gebruiker iets hoeft te typen.
+- **`honcho_reasoning` tool**: Atlas kan op elk moment expliciet geheugen opvragen.
+
+De `dialecticCadence` bepaalt hoe vaak Honcho tussentijds een achtergrond-LLM-call doet om context te verversen (in beurten). Op een single-GPU setup concurreert deze achtergrondcall rechtstreeks met de hoofdinferentie van `qwen3:14b`, wat tot GPU contention en stille timeouts leidt.
+
+**Instelling: `dialecticCadence: 10`** (was `2`). De eerste achtergrondrefresh verschuift naar beurt 10. De session-start prewarm biedt context voor de eerste 9 beurten; in langere sessies volgt daarna een periodieke refresh.
+
+> **Niet terug naar `1` of `2`:** Bij cadence 2 trad een stille `honcho_conclude`-fout op tijdens W3 van het testprotocol omdat de Honcho API bezet was met een dialectic prefetch-call naar `qwen3:14b`. Atlas meldde "informatie verwerkt" terwijl de conclusie niet was opgeslagen.
+
 Sleutelconfiguratie in `.env`:
 
 | Variabele | Waarde | Reden |
