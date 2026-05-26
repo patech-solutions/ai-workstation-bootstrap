@@ -152,7 +152,9 @@ Alle Ollama-aanroepen vanuit Docker gaan via `host.docker.internal:11434` (= `17
 | nomic-embed-text | ~0.6 GB |
 | **Totaal** | **~9.9 GB van 12.2 GB** |
 
-KV-cache (num_ctx 8192): ~0.5 GB extra. Totaal ~10.4 GB — past binnen 12 GB zonder model-evictie.
+KV-cache (num_ctx 8192): ~0.5 GB extra. Totaal ~10.4 GB — past binnen 12 GB zonder model-evictie tijdens actief gebruik.
+
+> **Cold start na inactiviteit:** Ondanks `OLLAMA_KEEP_ALIVE=-1` geeft WSL2 GPU-geheugen terug aan het host-OS na langere inactiviteit (uren). `ollama ps` kan het model nog als geladen tonen terwijl het feitelijk uit VRAM is — Windows Performance Monitor toont dan 0 GB. Reken bij de eerste call na een lange pauze op 1-3 minuten laadtijd. Dit geldt ook voor deriver, dream en de session-start prewarm.
 
 ### DB-vectordimensies
 
