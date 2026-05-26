@@ -94,7 +94,7 @@ if [ ! -L "$HOME/.docker/cli-plugins/docker-compose" ] && [ -x "/usr/libexec/doc
   echo "docker compose plugin symlink aangemaakt"
 fi
 
-docker compose up -d --build
+docker compose up -d --build --force-recreate
 
 # Verwijder eventuele oude override die de deriver uitschakelde
 OVERRIDE_FILE="$HONCHO_DIR/docker-compose.override.yml"
