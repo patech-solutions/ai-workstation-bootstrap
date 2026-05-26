@@ -121,24 +121,25 @@ Sleutelconfiguratie in `.env`:
 
 ### Deriver
 
-**De deriver is uitgeschakeld.** Reden: hallucineerde persoonlijke data (leeftijd, woonplaats, huisdier, geboortedatum) tijdens eerdere evaluatie. Conclusies worden uitsluitend via de `honcho_conclude` tool (Atlas) opgeslagen.
+**De deriver is ingeschakeld.** Verwerkt sessies automatisch na 15 minuten inactiviteit en extraheert conclusies. Dream consolideert conclusies naar peer-representaties na 30 minuten inactiviteit (minimaal 4 uur tussen cycli).
 
-Technische kanttekening: `DERIVER_ENABLED=false` in `.env` wordt **niet** gelezen door de Honcho broncode. De deriver moet als container worden gestopt. Het installatiescript regelt dit via `docker-compose.override.yml`:
+Eerdere evaluatie toonde hallucinaties, maar deze waren niet eenduidig aan de deriver toe te schrijven — er waren destijds meerdere variabelen tegelijk gewijzigd. Validatie loopt via `08-playbooks/Atlas-testprotocol-deriver-dream.md`.
 
-```yaml
-# ~/.local/share/patech/honcho/docker-compose.override.yml
+**Uitschakelen** (indien hallucinaties optreden):
+```bash
+# Zet DERIVER_FLUSH_ENABLED=false in .env
+cd ~/.local/share/patech/honcho
+docker restart honcho-deriver-1
+```
+
+Of permanent via override:
+```bash
+cat > ~/.local/share/patech/honcho/docker-compose.override.yml << 'EOF'
 services:
   deriver:
     restart: "no"
-```
-
-Dit voorkomt dat de deriver na een reboot automatisch herstart. Na `docker compose up -d` stopt het script de container direct.
-
-**Herinschakelen** (als een beter model beschikbaar is):
-```bash
-rm ~/.local/share/patech/honcho/docker-compose.override.yml
-# Zet DERIVER_FLUSH_ENABLED=true in .env
-cd ~/.local/share/patech/honcho && docker compose up -d
+EOF
+docker compose -f docker-compose.yml -f docker-compose.override.yml stop deriver
 ```
 
 Alle Ollama-aanroepen vanuit Docker gaan via `host.docker.internal:11434` (= `172.17.0.1` via `host-gateway` in `extra_hosts`).

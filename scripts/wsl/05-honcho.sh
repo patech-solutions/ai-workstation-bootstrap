@@ -50,14 +50,13 @@ set_env EMBEDDING_MODEL_CONFIG__MODEL "nomic-embed-text"
 set_env EMBEDDING_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env EMBEDDING_VECTOR_DIMENSIONS "768"
 
-# Deriver — uitgeschakeld: hallucineerde persoonlijke data.
+# Deriver — verwerkt sessies na inactiviteit en extraheert conclusies.
 # Deriver/Summary/Dream draaien op qwen3:14b (alleen bij inactiviteit).
-# Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
 set_env DERIVER_MODEL_CONFIG__TRANSPORT "openai"
 set_env DERIVER_MODEL_CONFIG__MODEL "qwen3:14b"
 set_env DERIVER_MODEL_CONFIG__OVERRIDES__BASE_URL "http://host.docker.internal:11434/v1"
 set_env DERIVER_STALE_SESSION_TIMEOUT_MINUTES "15"
-set_env DERIVER_FLUSH_ENABLED "false"
+set_env DERIVER_FLUSH_ENABLED "true"
 set_env DERIVER_DEDUPLICATE "true"
 
 # Dream — drempelwaarden voor consolidatiecyclus
@@ -97,22 +96,12 @@ fi
 
 docker compose up -d --build
 
-# Deriver uitschakelen via override — voorkomt automatisch herstarten na reboot
+# Verwijder eventuele oude override die de deriver uitschakelde
 OVERRIDE_FILE="$HONCHO_DIR/docker-compose.override.yml"
-if [ ! -f "$OVERRIDE_FILE" ]; then
-  cat > "$OVERRIDE_FILE" << 'EOF'
-# Deriver uitgeschakeld: hallucineert persoonlijke data.
-# Conclusies worden uitsluitend via honcho_conclude (Atlas) opgeslagen.
-# Herinschakelen: verwijder dit bestand of wijzig restart naar 'unless-stopped'.
-services:
-  deriver:
-    restart: "no"
-EOF
-  echo "docker-compose.override.yml aangemaakt (deriver disabled)"
+if [ -f "$OVERRIDE_FILE" ] && grep -q 'restart: "no"' "$OVERRIDE_FILE"; then
+  rm "$OVERRIDE_FILE"
+  echo "docker-compose.override.yml verwijderd (deriver ingeschakeld)"
 fi
-
-docker compose -f docker-compose.yml -f docker-compose.override.yml stop deriver 2>/dev/null || true
-echo "Deriver container gestopt"
 
 # Honcho dashboard — script vanuit repo installeren
 DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"
