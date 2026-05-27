@@ -115,8 +115,9 @@ Sleutelconfiguratie in `.env`:
 | `DERIVER_FLUSH_ENABLED` | `false` | Deriver uitgeschakeld (zie sectie Deriver) |
 | `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
 | `DERIVER_DEDUPLICATE` | `true` | Dedupliceert conclusions binnen een deriver-run |
-| `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit |
+| `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit (na het bereiken van de drempel) |
 | `DREAM_MIN_HOURS_BETWEEN_DREAMS` | `4` | Maximaal één Dream-cyclus per 4 uur |
+| `DREAM_DOCUMENT_THRESHOLD` | `50` (standaard) | Minimaal aantal expliciete documenten per collectie voordat Dream triggert. Elke deriver-sessie voegt ~10-15 docs toe. |
 | Alle `*_MODEL_CONFIG__MODEL` | `qwen3:14b` | Één model in VRAM, geen evictie |
 
 ### Deriver
