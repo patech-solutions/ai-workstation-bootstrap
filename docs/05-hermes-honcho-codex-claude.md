@@ -124,6 +124,8 @@ Sleutelconfiguratie in `.env`:
 
 **De deriver is ingeschakeld.** Verwerkt sessies automatisch na 15 minuten inactiviteit en extraheert conclusies. Dream consolideert conclusies naar peer-representaties na 30 minuten inactiviteit (minimaal 4 uur tussen cycli).
 
+**Dream hallucineert in deductieve laag bij speculatieve Atlas-antwoorden.** De deriver extraheert observaties van beide kanten — ook Atlas's antwoorden. Als Atlas suggestieve of vooruitblikkende antwoorden geeft, worden die als feiten opgeslagen. Dream's deductieve redenering voegt daar niet-ondersteunde specificiteit aan toe (verzonnen deadlines, causaliteitsketens). qwen3:14b gebruikt de systeemdatum als anker. Mitigatie: houd contextsessies feitelijk en vermijd open vragen die Atlas aanzetten tot speculatieve plannen. De expliciete observatielaag blijft betrouwbaar — hallucinaties ontstaan in de deductieve inferentie bovenop speculatieve bronobservaties.
+
 Eerdere evaluatie toonde hallucinaties, maar deze waren niet eenduidig aan de deriver toe te schrijven — er waren destijds meerdere variabelen tegelijk gewijzigd. Validatie loopt via `08-playbooks/Atlas-testprotocol-deriver-dream.md`.
 
 **Uitschakelen** (indien hallucinaties optreden):
