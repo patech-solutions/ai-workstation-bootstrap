@@ -124,7 +124,11 @@ Sleutelconfiguratie in `.env`:
 
 **De deriver is ingeschakeld.** Verwerkt sessies automatisch na 15 minuten inactiviteit en extraheert conclusies. Dream consolideert conclusies naar peer-representaties na 30 minuten inactiviteit (minimaal 4 uur tussen cycli).
 
-**Dream hallucineert in deductieve laag bij speculatieve Atlas-antwoorden.** De deriver extraheert observaties van beide kanten — ook Atlas's antwoorden. Als Atlas suggestieve of vooruitblikkende antwoorden geeft, worden die als feiten opgeslagen. Dream's deductieve redenering voegt daar niet-ondersteunde specificiteit aan toe (verzonnen deadlines, causaliteitsketens). qwen3:14b gebruikt de systeemdatum als anker. Mitigatie: houd contextsessies feitelijk en vermijd open vragen die Atlas aanzetten tot speculatieve plannen. De expliciete observatielaag blijft betrouwbaar — hallucinaties ontstaan in de deductieve inferentie bovenop speculatieve bronobservaties.
+**Dream hallucineert in deductieve laag bij speculatieve Atlas-antwoorden.** De deriver extraheert observaties van beide kanten — ook Atlas's antwoorden. Als Atlas suggestieve of vooruitblikkende antwoorden geeft, worden die als feiten opgeslagen. Dream's deductieve redenering voegt daar niet-ondersteunde specificiteit aan toe (verzonnen deadlines, causaliteitsketens). qwen3:14b gebruikt de systeemdatum als anker.
+
+Dit is primair een **procesprobleem**: Dream heeft geen verificatiestap en maakt geen onderscheid tussen feitelijke gebruikersuitspraken en intentie-uitspraken van Atlas. Beide worden als gelijkwaardige invoer behandeld. Het model is secundair — een groter model zou conservatiever zijn, maar het structurele risico blijft bij speculatieve invoer.
+
+**Mitigatie:** Houd contextsessies feitelijk en vermijd open vragen die Atlas aanzetten tot speculatieve plannen. De expliciete observatielaag blijft betrouwbaar — hallucinaties ontstaan in de deductieve inferentie bovenop speculatieve bronobservaties.
 
 Eerdere evaluatie toonde hallucinaties, maar deze waren niet eenduidig aan de deriver toe te schrijven — er waren destijds meerdere variabelen tegelijk gewijzigd. Validatie loopt via `08-playbooks/Atlas-testprotocol-deriver-dream.md`.
 
