@@ -103,12 +103,13 @@ if [ -f "$OVERRIDE_FILE" ] && grep -q 'restart: "no"' "$OVERRIDE_FILE"; then
   echo "docker-compose.override.yml verwijderd (deriver ingeschakeld)"
 fi
 
-# Honcho dashboard — script vanuit repo installeren
+# Honcho dashboard — download vanuit GitHub
 DASHBOARD_SCRIPT="$HOME/.hermes/scripts/honcho-dashboard.py"
 SERVICE_FILE="$HOME/.config/systemd/user/honcho-dashboard.service"
 
 mkdir -p "$HOME/.hermes/scripts"
-cp "$REPO_ROOT/config/hermes/scripts/honcho-dashboard.py" "$DASHBOARD_SCRIPT"
+curl -fsSL "https://raw.githubusercontent.com/patech-solutions/honcho-dashboard/main/honcho-dashboard.py" \
+  -o "$DASHBOARD_SCRIPT"
 echo "honcho-dashboard.py geïnstalleerd"
 
 # Systemd user service
@@ -125,7 +126,7 @@ Type=simple
 ExecStart=/usr/bin/python3 /home/pascal/.hermes/scripts/honcho-dashboard.py
 WorkingDirectory=/home/pascal/.hermes
 Environment="HONCHO_URL=http://localhost:8000"
-Environment="HONCHO_WORKSPACE=patech-wsa-01"
+Environment="HONCHO_WORKSPACE=default"
 Environment="DASHBOARD_PORT=8080"
 Restart=always
 RestartSec=5
