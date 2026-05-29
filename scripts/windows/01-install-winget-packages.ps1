@@ -18,7 +18,8 @@ $packages = @(
     "Python.Python.3.12",
     "7zip.7zip",
     "Notepad++.Notepad++",
-    "WinSCP.WinSCP"
+    "WinSCP.WinSCP",
+    "JohnMacFarlane.Pandoc"
 )
 
 foreach ($pkg in $packages) {
