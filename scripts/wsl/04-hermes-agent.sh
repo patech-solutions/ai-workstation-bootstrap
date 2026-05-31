@@ -53,16 +53,26 @@ fi
 cp "$CONFIG_DIR/config.yaml" "$CONFIG_YAML_DST"
 echo "   config.yaml geïnstalleerd"
 
-# honcho.json — altijd vanuit repo installeren (bevat pinPeerName, peer config én contextTokens)
+# honcho.json — genereer vanuit template met bootstrap-variabelen
 echo "-- honcho.json installeren --"
+BOOTSTRAP_ENV="$REPO_ROOT/config/bootstrap.env"
+[[ -f "$BOOTSTRAP_ENV" ]] && source "$BOOTSTRAP_ENV"
+HONCHO_PEER="${BOOTSTRAP_HONCHO_PEER_NAME:-${USER}}"
+HONCHO_AI="${BOOTSTRAP_HONCHO_AI_PEER:-atlas}"
+HONCHO_WS="${BOOTSTRAP_HONCHO_WORKSPACE:-default}"
+
 HONCHO_DST="$HOME/.hermes/honcho.json"
 if [[ -f "$HONCHO_DST" ]]; then
     BACKUP="${HONCHO_DST}.bak.$(date +%Y%m%d_%H%M%S)"
     cp "$HONCHO_DST" "$BACKUP"
     echo "   bestaande honcho.json gebackupt naar: $BACKUP"
 fi
-cp "$CONFIG_DIR/honcho.json" "$HONCHO_DST"
-echo "   honcho.json geïnstalleerd"
+sed \
+    -e "s|__HONCHO_PEER_NAME__|${HONCHO_PEER}|g" \
+    -e "s|__HONCHO_AI_PEER__|${HONCHO_AI}|g" \
+    -e "s|__HONCHO_WORKSPACE__|${HONCHO_WS}|g" \
+    "$CONFIG_DIR/honcho.json" > "$HONCHO_DST"
+echo "   honcho.json geïnstalleerd (peer: ${HONCHO_PEER}, workspace: ${HONCHO_WS})"
 
 # Honcho client.py patch: per-session strategie bypassed gateway_session_key zodat
 # !new in Matrix een nieuwe Honcho sessie aanmaakt (session_id uit sessions.json).
@@ -145,8 +155,8 @@ Nog handmatig uitvoeren (vereist interactieve terminal):
   hermes memory setup
     → Kies: honcho
     → Base URL: http://localhost:8000
-    → Workspace: patech-wsa-01
-    → User peer: pascal / AI peer: atlas
+    → Workspace: (zie BOOTSTRAP_HONCHO_WORKSPACE in config/bootstrap.env)
+    → User peer: (zie BOOTSTRAP_HONCHO_PEER_NAME) / AI peer: (zie BOOTSTRAP_HONCHO_AI_PEER)
 
 Na setup:
   systemctl --user enable hermes-gateway.service

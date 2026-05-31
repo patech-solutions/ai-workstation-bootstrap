@@ -7,7 +7,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "PaTech Windows bootstrap for patech-wsa-01"
+$ConfigFile = Join-Path $PSScriptRoot "..\..\config\bootstrap.ps1"
+if (Test-Path $ConfigFile) {
+    . $ConfigFile
+} else {
+    Write-Warning "config\bootstrap.ps1 niet gevonden. Kopieer bootstrap.ps1.example en vul in."
+}
+
+$hostname = if ($BOOTSTRAP_HOSTNAME) { $BOOTSTRAP_HOSTNAME } else { "ai-workstation" }
+Write-Host "AI Workstation Windows bootstrap — $hostname"
 
 if (-not $SkipHostname -and (Test-Path "$PSScriptRoot\00-set-hostname.ps1")) {
     & "$PSScriptRoot\00-set-hostname.ps1"

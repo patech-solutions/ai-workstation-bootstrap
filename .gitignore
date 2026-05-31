@@ -1,7 +1,11 @@
-# Secrets
+# Secrets en lokale configuratie
 .env
 .env.*
 !.env.example
+config/bootstrap.env
+config/bootstrap.ps1
+!config/bootstrap.env.example
+!config/bootstrap.ps1.example
 *.pem
 *.key
 *_token*

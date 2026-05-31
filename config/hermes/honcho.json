@@ -1,9 +1,9 @@
 {
   "hosts": {
     "hermes": {
-      "peerName": "pascal",
-      "aiPeer": "atlas",
-      "workspace": "patech-wsa-01",
+      "peerName": "__HONCHO_PEER_NAME__",
+      "aiPeer": "__HONCHO_AI_PEER__",
+      "workspace": "__HONCHO_WORKSPACE__",
       "observationMode": "directional",
       "writeFrequency": "async",
       "recallMode": "hybrid",

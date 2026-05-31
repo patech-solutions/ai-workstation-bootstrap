@@ -115,7 +115,7 @@ echo "honcho-dashboard.py geïnstalleerd"
 # Systemd user service
 if true; then
   mkdir -p "$HOME/.config/systemd/user"
-  cat > "$SERVICE_FILE" << 'EOF'
+  cat > "$SERVICE_FILE" << EOF
 [Unit]
 Description=Honcho Memory Dashboard
 After=network-online.target
@@ -123,10 +123,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/pascal/.hermes/scripts/honcho-dashboard.py
-WorkingDirectory=/home/pascal/.hermes
+ExecStart=/usr/bin/python3 ${HOME}/.hermes/scripts/honcho-dashboard.py
+WorkingDirectory=${HOME}/.hermes
 Environment="HONCHO_URL=http://localhost:8000"
-Environment="HONCHO_WORKSPACE=default"
+Environment="HONCHO_WORKSPACE=${BOOTSTRAP_HONCHO_WORKSPACE:-default}"
 Environment="DASHBOARD_PORT=8080"
 Restart=always
 RestartSec=5

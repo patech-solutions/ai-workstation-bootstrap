@@ -1,6 +1,6 @@
 [user]
-    name = Pascal van de Bor
-    email = vandeborp@gmail.com
+    name = __BOOTSTRAP_USER_FULLNAME__
+    email = __BOOTSTRAP_USER_EMAIL__
 [init]
     defaultBranch = main
 [pull]

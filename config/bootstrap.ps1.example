@@ -1,0 +1,15 @@
+# bootstrap.ps1 — pas aan vóór de eerste run
+# Kopieer config/bootstrap.ps1.example naar config/bootstrap.ps1 en vul in.
+# Dit bestand wordt gesourced door de Windows PowerShell-scripts.
+
+# ── Identiteit ────────────────────────────────────────────────────────────────
+$BOOTSTRAP_USER_FULLNAME  = "Your Name"
+$BOOTSTRAP_USER_EMAIL     = "you@example.com"
+$BOOTSTRAP_GIT_USERNAME   = "yourusername"
+
+# ── Machine ───────────────────────────────────────────────────────────────────
+# Gewenste hostnaam van deze Windows-machine
+$BOOTSTRAP_HOSTNAME       = "ai-workstation"
+
+# ── Organisatie ───────────────────────────────────────────────────────────────
+$BOOTSTRAP_COMPANY_NAME   = "Your Company"
