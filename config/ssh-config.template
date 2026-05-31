@@ -1,5 +1,5 @@
-Host gitea-patech
-    HostName gitea.patechsolutions.nl
+Host gitea-local
+    HostName __BOOTSTRAP_GITEA_HOST__
     User git
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes

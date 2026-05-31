@@ -1,4 +1,4 @@
-# Firecrawl self-hosted op patech-wsa-01
+# Firecrawl self-hosted in WSL2
 
 ## Doel
 

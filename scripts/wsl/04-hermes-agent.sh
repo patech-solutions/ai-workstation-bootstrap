@@ -4,6 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONFIG_DIR="$REPO_ROOT/config/hermes"
+BOOTSTRAP_ENV="$REPO_ROOT/config/bootstrap.env"
+
+# Laad bootstrap-variabelen als beschikbaar
+[[ -f "$BOOTSTRAP_ENV" ]] && source "$BOOTSTRAP_ENV"
+OBSIDIAN_WINDOWS_USER="${BOOTSTRAP_WINDOWS_USER:-${USER}}"
+OBSIDIAN_VAULT_SUBDIR="${BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR:-AI-Workspace}"
 
 echo "== Hermes Agent installeren =="
 
@@ -50,13 +56,15 @@ if [[ -f "$CONFIG_YAML_DST" ]]; then
     cp "$CONFIG_YAML_DST" "$BACKUP"
     echo "   bestaande config.yaml gebackupt naar: $BACKUP"
 fi
-cp "$CONFIG_DIR/config.yaml" "$CONFIG_YAML_DST"
+sed \
+    -e "s|__BOOTSTRAP_WINDOWS_USER__|${OBSIDIAN_WINDOWS_USER}|g" \
+    -e "s|__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__|${OBSIDIAN_VAULT_SUBDIR}|g" \
+    -e "s|__BOOTSTRAP_HOME__|${HOME}|g" \
+    "$CONFIG_DIR/config.yaml" > "$CONFIG_YAML_DST"
 echo "   config.yaml geïnstalleerd"
 
 # honcho.json — genereer vanuit template met bootstrap-variabelen
 echo "-- honcho.json installeren --"
-BOOTSTRAP_ENV="$REPO_ROOT/config/bootstrap.env"
-[[ -f "$BOOTSTRAP_ENV" ]] && source "$BOOTSTRAP_ENV"
 HONCHO_PEER="${BOOTSTRAP_HONCHO_PEER_NAME:-${USER}}"
 HONCHO_AI="${BOOTSTRAP_HONCHO_AI_PEER:-atlas}"
 HONCHO_WS="${BOOTSTRAP_HONCHO_WORKSPACE:-default}"
@@ -104,16 +112,39 @@ if [[ -f "$SOUL_DST" ]]; then
     cp "$SOUL_DST" "$BACKUP"
     echo "   bestaande SOUL.md gebackupt naar: $BACKUP"
 fi
-cp "$CONFIG_DIR/SOUL.md" "$SOUL_DST"
+HONCHO_PEER="${BOOTSTRAP_HONCHO_PEER_NAME:-${USER}}"
+HONCHO_AI="${BOOTSTRAP_HONCHO_AI_PEER:-atlas}"
+sed \
+    -e "s|__BOOTSTRAP_HONCHO_AI_PEER__|${HONCHO_AI}|g" \
+    -e "s|__BOOTSTRAP_USER_FULLNAME__|${BOOTSTRAP_USER_FULLNAME:-${USER}}|g" \
+    -e "s|__BOOTSTRAP_COMPANY_NAME__|${BOOTSTRAP_COMPANY_NAME:-Your Company}|g" \
+    -e "s|__BOOTSTRAP_HOSTNAME__|${BOOTSTRAP_HOSTNAME:-ai-workstation}|g" \
+    -e "s|__BOOTSTRAP_VIKUNJA_HOST__|${BOOTSTRAP_VIKUNJA_HOST:-}|g" \
+    -e "s|__BOOTSTRAP_OUTLINE_URL__|${BOOTSTRAP_OUTLINE_URL:-}|g" \
+    -e "s|__BOOTSTRAP_MATRIX_ROOM_ID__|${BOOTSTRAP_MATRIX_ROOM_ID:-}|g" \
+    -e "s|__BOOTSTRAP_WINDOWS_USER__|${OBSIDIAN_WINDOWS_USER}|g" \
+    -e "s|__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__|${OBSIDIAN_VAULT_SUBDIR}|g" \
+    -e "s|__BOOTSTRAP_NAS_HOST__|${BOOTSTRAP_NAS_HOST:-}|g" \
+    "$CONFIG_DIR/SOUL.md" > "$SOUL_DST"
 echo "   SOUL.md geïnstalleerd"
 
 # MEMORY.md en USER.md — alleen installeren bij frisse installatie (zijn data, groeien over tijd)
 echo "-- basis geheugen installeren --"
 mkdir -p "$HOME/.hermes/memories"
 
+_render_memory_file() {
+    local src="$1" dst="$2"
+    sed \
+        -e "s|__BOOTSTRAP_WINDOWS_USER__|${OBSIDIAN_WINDOWS_USER}|g" \
+        -e "s|__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__|${OBSIDIAN_VAULT_SUBDIR}|g" \
+        -e "s|__BOOTSTRAP_USER_FULLNAME__|${BOOTSTRAP_USER_FULLNAME:-${USER}}|g" \
+        -e "s|__BOOTSTRAP_COMPANY_NAME__|${BOOTSTRAP_COMPANY_NAME:-Your Company}|g" \
+        "$src" > "$dst"
+}
+
 MEMORY_DST="$HOME/.hermes/memories/MEMORY.md"
 if [[ ! -f "$MEMORY_DST" ]]; then
-    cp "$CONFIG_DIR/MEMORY.md" "$MEMORY_DST"
+    _render_memory_file "$CONFIG_DIR/MEMORY.md" "$MEMORY_DST"
     echo "   MEMORY.md geïnstalleerd"
 else
     echo "   MEMORY.md bestaat al — overgeslagen (gebruik --reset-memory om te overschrijven)"
@@ -121,7 +152,7 @@ fi
 
 USER_DST="$HOME/.hermes/memories/USER.md"
 if [[ ! -f "$USER_DST" ]]; then
-    cp "$CONFIG_DIR/USER.md" "$USER_DST"
+    _render_memory_file "$CONFIG_DIR/USER.md" "$USER_DST"
     echo "   USER.md geïnstalleerd"
 else
     echo "   USER.md bestaat al — overgeslagen"
@@ -135,7 +166,7 @@ if [[ "${1:-}" == "--reset-memory" ]]; then
         if [[ -f "$DST" ]]; then
             cp "$DST" "${DST}.bak.$(date +%Y%m%d_%H%M%S)"
         fi
-        cp "$CONFIG_DIR/$f" "$DST"
+        _render_memory_file "$CONFIG_DIR/$f" "$DST"
         echo "   $f hersteld vanuit repo"
     done
 fi

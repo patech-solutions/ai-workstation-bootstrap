@@ -23,8 +23,8 @@ mkdir -p \
   "${OBSIDIAN_VAULT_DIR}/08-playbooks" \
   "${OBSIDIAN_VAULT_DIR}/99-archive"
 
-cat > "${OBSIDIAN_VAULT_DIR}/README.md" <<'EOF'
-# PaTech AI Workspace
+cat > "${OBSIDIAN_VAULT_DIR}/README.md" <<EOF
+# ${OBSIDIAN_COMPANY_NAME} AI Workspace
 
 Lokale Obsidian vault voor AI-assisted werk.
 
@@ -49,12 +49,12 @@ Lokale Obsidian vault voor AI-assisted werk.
 - Git gebruiken voor alle wijzigingen
 EOF
 
-cat > "${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md" <<'EOF'
-# PaTech AI Workspace Regels
+cat > "${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md" <<EOF
+# ${OBSIDIAN_COMPANY_NAME} AI Workspace Regels
 
 ## Algemeen
 
-Deze Obsidian vault is de primaire AI-ondersteunde werkruimte voor PaTech Solutions.
+Deze Obsidian vault is de primaire AI-ondersteunde werkruimte voor ${OBSIDIAN_COMPANY_NAME}.
 
 De vault bevat:
 - klantdocumentatie
@@ -138,7 +138,7 @@ Nooit benaderen of wijzigen:
 EOF
 
 cat > "${OBSIDIAN_VAULT_DIR}/.hermes.md" <<EOF
-# PaTech AI Workspace
+# ${OBSIDIAN_COMPANY_NAME} AI Workspace
 
 Dit is de Obsidian vault van ${OBSIDIAN_USER_DISPLAY_NAME} (${OBSIDIAN_COMPANY_NAME}).
 Vault locatie: \`${OBSIDIAN_VAULT_DIR}\`
@@ -170,7 +170,7 @@ Lees de volledige werkregels in: \`${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md\`
 1. Lees relevante project- of klantnotities
 2. Lees het bijpassende template
 3. Maak een draft aan in \`${OBSIDIAN_VAULT_DIR}/00-inbox/\`
-4. Pascal beoordeelt en promoot naar de permanente map
+4. Beoordeelt en promoot naar de permanente map
 
 ## Sync
 

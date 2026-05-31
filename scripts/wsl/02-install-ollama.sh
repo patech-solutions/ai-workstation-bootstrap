@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== PaTech WSL bootstrap: Ollama native in WSL =="
+echo "== AI Workstation bootstrap: Ollama native in WSL =="
 
 if ! command -v zstd >/dev/null 2>&1; then
   sudo apt update

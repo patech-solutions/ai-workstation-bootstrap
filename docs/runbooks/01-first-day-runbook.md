@@ -20,7 +20,7 @@ Open Ubuntu 24.04 from Start Menu and create Linux user.
 ## 3. Clone repo
 
 ```bash
-git clone git@gitea.patechsolutions.nl:patech/ai-workstation-bootstrap.git
+git clone https://github.com/patech-solutions/ai-workstation-bootstrap.git
 cd ai-workstation-bootstrap
 ```
 

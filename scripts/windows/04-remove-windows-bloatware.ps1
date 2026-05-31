@@ -1,6 +1,6 @@
 <# 
 .SYNOPSIS
-  PaTech Windows 11 bloatware cleanup script for patech-wsa-01.
+  Windows 11 bloatware cleanup script for AI workstation baseline.
 
 .DESCRIPTION
   Removes common consumer/OEM bloatware and specifically targets Norton/Symantec/Norton 360 for Gamers.
@@ -36,7 +36,7 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-$LogDir = Join-Path $env:ProgramData "PaTech\Bootstrap\Logs"
+$LogDir = Join-Path $env:ProgramData "AIWorkstation\Bootstrap\Logs"
 New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
 $LogFile = Join-Path $LogDir ("bloatware-cleanup-{0}.log" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
 
@@ -81,7 +81,7 @@ if (-not (Test-IsAdmin)) {
     Write-Log "This script should be run as Administrator. Some cleanup steps will fail otherwise." "WARN"
 }
 
-Write-Log "Starting PaTech Windows bloatware cleanup for patech-wsa-01" "INFO"
+Write-Log "Starting Windows bloatware cleanup for AI workstation" "INFO"
 Write-Log "Log file: $LogFile" "INFO"
 Write-Log "WhatIfOnly=$WhatIfOnly; AggressiveNortonCleanup=$AggressiveNortonCleanup" "INFO"
 

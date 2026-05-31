@@ -1,4 +1,4 @@
-# Honcho template voor lokale AI memory op patech-wsa-01
+# Honcho template voor lokale AI memory
 
 server:
   host: 127.0.0.1

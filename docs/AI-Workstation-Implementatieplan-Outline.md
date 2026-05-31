@@ -1,16 +1,16 @@
-# PaTech AI Workstation Implementatieplan
+# AI Workstation Implementatieplan
 
 ## Workstation
 
 | Onderdeel | Waarde |
 |---|---|
-| Hostname | `patech-wsa-01` |
+| Hostname | zie `BOOTSTRAP_HOSTNAME` in `config/bootstrap.env` |
 | OS | Windows 11 Pro |
 | Linux laag | WSL2 Ubuntu |
 | AI runtime | Ollama native in WSL |
 | Windows Ollama | Niet gebruiken / verwijderd |
 | Repository | `ai-workstation-bootstrap` |
-| Gitea | `http://ugreendxp2800.local:3000` |
+| Gitea | zie `BOOTSTRAP_GITEA_HOST` in `config/bootstrap.env` |
 
 ## Belangrijkste wijziging
 

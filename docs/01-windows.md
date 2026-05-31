@@ -1,4 +1,4 @@
-# Windows 11 inrichting voor patech-wsa-01
+# Windows 11 inrichting voor AI workstation
 
 ## Doel
 
@@ -27,7 +27,7 @@ Windows 11 blijft de primaire hostlaag voor:
 ```powershell
 mkdir C:\git
 cd C:\git
-git clone http://ugreendxp2800.local:3000/Paikke/ai-workstation-bootstrap.git
+git clone https://github.com/patech-solutions/ai-workstation-bootstrap.git
 cd ai-workstation-bootstrap
 ```
 

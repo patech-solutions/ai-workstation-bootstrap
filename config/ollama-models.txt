@@ -1,4 +1,4 @@
-# PaTech AI Workstation — Ollama modellen
+# AI Workstation — Ollama modellen
 # Volgorde: standaardmodel eerst (grootste prioriteit voor VRAM-warmte)
 
 # Primair model — qwen3:14b (tool-support, gebalanceerd conversatie/tools, ollama_num_ctx 8192 via config.yaml)

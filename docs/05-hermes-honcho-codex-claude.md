@@ -27,8 +27,8 @@ hermes setup
 hermes memory setup
 # → honcho
 # → Base URL: http://localhost:8000
-# → Workspace: patech-wsa-01
-# → User peer: pascal / AI peer: atlas
+# → Workspace: zie BOOTSTRAP_HONCHO_WORKSPACE in config/bootstrap.env
+# → User peer: zie BOOTSTRAP_HONCHO_PEER_NAME / AI peer: zie BOOTSTRAP_HONCHO_AI_PEER
 ```
 
 Daarna de gateway als service starten:
@@ -44,27 +44,17 @@ cp ~/ai-workstation-bootstrap/config/hermes/SOUL.md ~/.hermes/SOUL.md
 ```
 
 Relevante bestanden:
-- `~/.hermes/SOUL.md` — Atlas identiteit en gedragsregels (canoniek: `config/hermes/SOUL.md`)
+- `~/.hermes/SOUL.md` — AI assistent identiteit en gedragsregels (canoniek: `config/hermes/SOUL.md`)
 - `~/.hermes/memories/MEMORY.md` — werkgeheugen (canoniek: `config/hermes/MEMORY.md`)
 - `~/.hermes/config.yaml` — Hermes configuratie (model, memory backend, etc.)
 - `~/.hermes/honcho.json` — Honcho verbinding en peer-configuratie (canoniek: `config/hermes/honcho.json`)
 
 **Patch: `!new` maakt ook nieuwe Honcho sessie aan.** Het bootstrap script patcht automatisch `plugins/memory/honcho/client.py` na de Hermes installatie. Zonder patch gebruikt de gateway altijd de Matrix room ID als Honcho sessie-ID, waardoor `!new` geen effect heeft op Honcho. Met patch: `sessionStrategy: "per-session"` in `honcho.json` laat de Hermes session_id (opgeslagen in `sessions.json`) de Honcho sessie bepalen — nieuw na elke `!new`, persistent over gateway-herstarts.
 
-**Belangrijk:** Na `hermes memory setup` moet `honcho.json` handmatig worden aangevuld met `pinPeerName: true` in het `hosts.hermes` blok. Zonder dit wordt de Matrix user ID (`@pascal:thuis.matrix.duckdns.org`) gebruikt als peer naam, wat een leading dash introduceert en `honcho_conclude` kapot maakt:
+**Belangrijk:** Na `hermes memory setup` moet `honcho.json` handmatig worden aangevuld met `pinPeerName: true` in het `hosts.hermes` blok. Zonder dit wordt de Matrix user ID gebruikt als peer naam, wat een leading dash introduceert en `honcho_conclude` kapot maakt. Het bootstrap script genereert `honcho.json` vanuit `config/hermes/honcho.json` met de juiste placeholders ingevuld — herstel na `hermes memory setup` met:
 
-```json
-{
-  "hosts": {
-    "hermes": {
-      "peerName": "pascal",
-      "aiPeer": "atlas",
-      "workspace": "patech-wsa-01",
-      "pinPeerName": true,
-      ...
-    }
-  }
-}
+```bash
+./scripts/wsl/04-hermes-agent.sh
 ```
 
 ---

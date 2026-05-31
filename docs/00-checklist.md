@@ -1,4 +1,4 @@
-# Checklist implementatie patech-wsa-01
+# Checklist implementatie AI workstation
 
 ## Voorbereiding
 
@@ -10,7 +10,7 @@
 - [ ] NVIDIA Studio Driver installeren
 - [ ] BitLocker inschakelen
 - [ ] Herstelcode veilig opslaan
-- [ ] Computernaam instellen op `patech-wsa-01`
+- [ ] Computernaam instellen (zie `BOOTSTRAP_HOSTNAME` in `config/bootstrap.env`)
 
 ## Basis tooling
 

@@ -10,7 +10,7 @@ if (!(Test-Path $sshDir)) {
 if (Test-Path $keyPath) {
     Write-Host "Key already exists: $keyPath"
 } else {
-    ssh-keygen -t ed25519 -C "vandeborp@gitea-ai-workstation" -f $keyPath
+    ssh-keygen -t ed25519 -C "$env:USERNAME@gitea-ai-workstation" -f $keyPath
 }
 
 Write-Host ""

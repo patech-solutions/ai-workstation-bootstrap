@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== PaTech WSL bootstrap: base Ubuntu packages =="
+echo "== AI Workstation bootstrap: base Ubuntu packages =="
 
 sudo apt update
 sudo apt upgrade -y

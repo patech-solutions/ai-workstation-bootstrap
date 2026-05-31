@@ -73,7 +73,7 @@ agent:
 terminal:
   backend: local
   modal_mode: auto
-  cwd: /mnt/c/Users/Pascal/PaTech/AI-Workspace
+  cwd: /mnt/c/Users/__BOOTSTRAP_WINDOWS_USER__/__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__
   timeout: 180
   env_passthrough: []
   shell_init_files: []

@@ -2,7 +2,7 @@
 
 ## Context
 
-Dit document beschrijft de inrichting van een mobiele AI-workstation op basis van Windows 11, met WSL2 Ubuntu als technische werklaag. De inrichting is bedoeld voor PaTech Solutions en moet herbruikbaar zijn via een Gitea repository.
+Dit document beschrijft de inrichting van een mobiele AI-workstation op basis van Windows 11, met WSL2 Ubuntu als technische werklaag. De inrichting is herhaalbaar en configureerbaar via dit bootstrap repository.
 
 ## Doelen
 

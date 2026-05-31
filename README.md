@@ -1,6 +1,6 @@
-# PaTech AI Workstation Bootstrap
+# AI Workstation Bootstrap
 
-Bootstrap repository voor `patech-wsa-01`.
+Bootstrap repository voor een Windows 11 + WSL2 AI-workstation.
 
 ## Architectuurkeuze
 
