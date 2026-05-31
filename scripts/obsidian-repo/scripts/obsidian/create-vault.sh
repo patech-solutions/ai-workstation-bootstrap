@@ -20,6 +20,7 @@ mkdir -p \
   "${OBSIDIAN_VAULT_DIR}/06-ai-memory/architecture" \
   "${OBSIDIAN_VAULT_DIR}/06-ai-memory/sessions" \
   "${OBSIDIAN_VAULT_DIR}/07-publish/staging" \
+  "${OBSIDIAN_VAULT_DIR}/07-publish/published" \
   "${OBSIDIAN_VAULT_DIR}/08-playbooks" \
   "${OBSIDIAN_VAULT_DIR}/99-archive"
 
@@ -155,8 +156,9 @@ Lees de volledige werkregels in: \`${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md\`
 | Architectuur | \`${OBSIDIAN_VAULT_DIR}/03-architecture/\` | Lezen |
 | Onderzoek | \`${OBSIDIAN_VAULT_DIR}/04-research/\` | Lezen |
 | Templates | \`${OBSIDIAN_VAULT_DIR}/05-templates/\` | Lezen |
-| Playbooks | \`${OBSIDIAN_VAULT_DIR}/08-playbooks/\` | Lezen |
 | Memory    | \`${OBSIDIAN_VAULT_DIR}/06-ai-memory/\` | Schrijven |
+| Publicatie | \`${OBSIDIAN_VAULT_DIR}/07-publish/\` | Schrijven (staging) |
+| Playbooks | \`${OBSIDIAN_VAULT_DIR}/08-playbooks/\` | Lezen |
 
 ## Werkregels
 
