@@ -11,6 +11,7 @@ mkdir -p \
   "${OBSIDIAN_VAULT_DIR}/00-inbox" \
   "${OBSIDIAN_VAULT_DIR}/01-clients" \
   "${OBSIDIAN_VAULT_DIR}/02-projects" \
+  "${OBSIDIAN_VAULT_DIR}/02-projects/01-intern" \
   "${OBSIDIAN_VAULT_DIR}/03-architecture" \
   "${OBSIDIAN_VAULT_DIR}/04-research" \
   "${OBSIDIAN_VAULT_DIR}/05-templates" \
@@ -148,17 +149,20 @@ Lees de volledige werkregels in: \`${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md\`
 
 ## Mappen en paden
 
-| Map | Absoluut pad | Toegang |
-|---|---|---|
-| Inbox (AI output) | \`${OBSIDIAN_VAULT_DIR}/00-inbox/\` | Schrijven |
-| Klanten | \`${OBSIDIAN_VAULT_DIR}/01-clients/\` | Lezen |
-| Projecten | \`${OBSIDIAN_VAULT_DIR}/02-projects/\` | Lezen |
-| Architectuur | \`${OBSIDIAN_VAULT_DIR}/03-architecture/\` | Lezen |
-| Onderzoek | \`${OBSIDIAN_VAULT_DIR}/04-research/\` | Lezen |
-| Templates | \`${OBSIDIAN_VAULT_DIR}/05-templates/\` | Lezen |
-| Memory    | \`${OBSIDIAN_VAULT_DIR}/06-ai-memory/\` | Schrijven |
-| Publicatie | \`${OBSIDIAN_VAULT_DIR}/07-publish/\` | Schrijven (staging) |
-| Playbooks | \`${OBSIDIAN_VAULT_DIR}/08-playbooks/\` | Lezen |
+| Map | Absoluut pad | Git sync | Toegang |
+|---|---|---|---|
+| Inbox (AI output) | \`${OBSIDIAN_VAULT_DIR}/00-inbox/\` | Nee | Schrijven |
+| Klanten | \`${OBSIDIAN_VAULT_DIR}/01-clients/\` | Ja | Lezen |
+| Projecten | \`${OBSIDIAN_VAULT_DIR}/02-projects/\` | Ja | Lezen |
+| Intern | \`${OBSIDIAN_VAULT_DIR}/02-projects/01-intern/\` | Ja | Lezen |
+| Architectuur | \`${OBSIDIAN_VAULT_DIR}/03-architecture/\` | Ja | Lezen |
+| Onderzoek | \`${OBSIDIAN_VAULT_DIR}/04-research/\` | Ja | Lezen |
+| Templates | \`${OBSIDIAN_VAULT_DIR}/05-templates/\` | Ja | Lezen |
+| AI Memory | \`${OBSIDIAN_VAULT_DIR}/06-ai-memory/\` | Nee | Schrijven |
+| Staging | \`${OBSIDIAN_VAULT_DIR}/07-publish/staging/\` | Nee | Schrijven |
+| Gepubliceerd | \`${OBSIDIAN_VAULT_DIR}/07-publish/published/\` | Ja | Lezen |
+| Playbooks | \`${OBSIDIAN_VAULT_DIR}/08-playbooks/\` | Ja | Lezen |
+| Archief | \`${OBSIDIAN_VAULT_DIR}/99-archive/\` | Ja | Lezen |
 
 ## Werkregels
 
@@ -176,7 +180,10 @@ Lees de volledige werkregels in: \`${OBSIDIAN_VAULT_DIR}/AI-Workspace-Rules.md\`
 
 ## Sync
 
-\`00-inbox/\` en \`06-ai-memory/\` zijn lokaal-only (niet gesynchroniseerd via git).
+Niet gesynchroniseerd via git (lokaal-only):
+- \`00-inbox/\` — AI-output en drafts
+- \`06-ai-memory/\` — AI werkgeheugen
+- \`07-publish/staging/\` — concepten in bewerking
 EOF
 
 echo "Vault structure created."

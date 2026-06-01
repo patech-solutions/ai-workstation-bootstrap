@@ -35,6 +35,7 @@ Thumbs.db
 # Local-only AI work (niet gesynchroniseerd)
 00-inbox/
 06-ai-memory/
+07-publish/staging/
 EOF
 
 git add .
