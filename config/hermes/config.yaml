@@ -23,7 +23,7 @@ agent:
   gateway_notify_interval: 180
   gateway_auto_continue_freshness: 3600
   image_input_mode: auto
-  disabled_toolsets: []
+  disabled_toolsets: [tts]
   personalities:
     catgirl: "You are Neko-chan, an anime catgirl AI assistant, nya~! Add 'nya' and\
       \ cat-like expressions to your speech. Use kaomoji like (=^\uFF65\u03C9\uFF65\
@@ -294,7 +294,7 @@ dashboard:
 privacy:
   redact_pii: false
 tts:
-  provider: piper
+  provider: ''
   edge:
     voice: nl-NL-MaartenNeural
   elevenlabs:
@@ -546,7 +546,6 @@ platform_toolsets:
   - terminal
   - memory
   - web
-  - tts
   - vision
   qqbot:
   - hermes-qqbot
