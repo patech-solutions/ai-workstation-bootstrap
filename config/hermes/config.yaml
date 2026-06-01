@@ -2,7 +2,7 @@ model:
   base_url: http://localhost:11434/v1
   default: qwen3:14b
   provider: custom
-  ollama_num_ctx: 8192
+  ollama_num_ctx: 16384
 providers: {}
 fallback_providers:
 - base_url: http://localhost:11434/v1
@@ -78,7 +78,7 @@ terminal:
   timeout: 180
   env_passthrough: []
   shell_init_files: []
-  auto_source_bashrc: true
+  auto_source_bashrc: false
   docker_image: nikolaik/python-nodejs:python3.11-nodejs20
   docker_forward_env: []
   docker_env: {}
@@ -545,8 +545,6 @@ platform_toolsets:
   matrix:
   - terminal
   - memory
-  - web
-  - vision
   qqbot:
   - hermes-qqbot
   signal:
