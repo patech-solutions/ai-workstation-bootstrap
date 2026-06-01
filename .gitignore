@@ -1,3 +1,7 @@
+# Lokale bootstrap-state (omgevingsspecifiek, niet committen)
+.bootstrap-state-wsl/
+.bootstrap-state-windows/
+
 # Secrets en lokale configuratie
 .env
 .env.*
