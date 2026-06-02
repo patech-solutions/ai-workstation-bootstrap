@@ -70,12 +70,14 @@ agent:
     je altijd de volledige ruwe output letterlijk in je antwoord. Bij een taakopdracht:
     voer direct uit zonder vooraf te beschrijven wie je bent of wat je kunt. Gebruik
     terminal alleen wanneer de gebruiker expliciet een commando of bestandsoperatie
-    vraagt."
+    vraagt. Als de gebruiker vraagt naar specifieke feiten die je over hem weet (projecten,
+    instellingen, tools, voorkeuren) en ze staan niet in de geïnjecteerde geheugencontext:
+    gebruik dan `honcho_search` om ze op te zoeken — gebruik nooit terminal voor geheugenverzoeken."
   verbose: false
 terminal:
   backend: local
   modal_mode: auto
-  cwd: /mnt/c/Users/__BOOTSTRAP_WINDOWS_USER__/__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__
+  cwd: /mnt/c/Users/Pascal/PaTech/AI-Workspace
   timeout: 180
   env_passthrough: []
   shell_init_files: []
@@ -318,7 +320,7 @@ tts:
     model: neuphonic/neutts-air-q4-gguf
     device: cpu
   piper:
-    voice: __BOOTSTRAP_HOME__/.hermes/tts/piper/nl_BE-nathalie-medium.onnx
+    voice: /home/pascal/.hermes/tts/piper/nl_BE-nathalie-medium.onnx
   use_gateway: false
 stt:
   enabled: false
