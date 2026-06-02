@@ -9,7 +9,6 @@
       "recallMode": "hybrid",
       "dialecticCadence": 20,
       "dialecticReasoningLevel": "minimal",
-      "timeout": 120,
       "sessionStrategy": "per-session",
       "pinPeerName": true,
       "enabled": true,
@@ -17,5 +16,6 @@
       "contextTokens": 750
     }
   },
-  "baseUrl": "http://localhost:8000"
+  "baseUrl": "http://localhost:8000",
+  "timeout": 120
 }
