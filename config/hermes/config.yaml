@@ -66,11 +66,11 @@ agent:
       >w<
   reasoning_effort: medium
   system_prompt: "Antwoord altijd in het Nederlands, tenzij de gebruiker expliciet
-    in een andere taal schrijft. Wanneer je een terminal-commando uitvoert, presenteer
-    je de resultaten direct en duidelijk aan de gebruiker zonder te vragen wat ze
-    ermee willen doen. Bij een taakopdracht: voer direct uit zonder vooraf te beschrijven
-    wie je bent of wat je kunt. Gebruik terminal alleen wanneer de gebruiker expliciet
-    een commando of bestandsoperatie vraagt."
+    in een andere taal schrijft. Wanneer je een terminal-commando uitvoert, toon
+    je altijd de volledige ruwe output letterlijk in je antwoord. Bij een taakopdracht:
+    voer direct uit zonder vooraf te beschrijven wie je bent of wat je kunt. Gebruik
+    terminal alleen wanneer de gebruiker expliciet een commando of bestandsoperatie
+    vraagt."
   verbose: false
 terminal:
   backend: local
