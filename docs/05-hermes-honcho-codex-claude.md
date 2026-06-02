@@ -45,9 +45,12 @@ cp ~/ai-workstation-bootstrap/config/hermes/SOUL.md ~/.hermes/SOUL.md
 
 Relevante bestanden:
 - `~/.hermes/SOUL.md` — AI assistent identiteit en gedragsregels (canoniek: `config/hermes/SOUL.md`)
+- `~/.hermes/hermes-agent/.hermes.md` — operationele configuratie: Vikunja, Obsidian, systeem-info (canoniek: `config/hermes/.hermes.md`). Wordt automatisch geladen door de gateway; gitignored in de hermes-agent repo.
 - `~/.hermes/memories/MEMORY.md` — werkgeheugen (canoniek: `config/hermes/MEMORY.md`)
 - `~/.hermes/config.yaml` — Hermes configuratie (model, memory backend, etc.)
 - `~/.hermes/honcho.json` — Honcho verbinding en peer-configuratie (canoniek: `config/hermes/honcho.json`)
+
+**SOUL.md vs .hermes.md:** SOUL.md bevat uitsluitend identiteit en gedragsregels (compact, altijd geladen). Operationele details (Vikunja-commando's, Obsidian-mapstructuur, systeem-adressen) staan in `.hermes.md` — zo blijft SOUL.md klein en daalt de promptgrootte met ~1.200 tokens.
 
 **Patch: `!new` maakt ook nieuwe Honcho sessie aan.** Het bootstrap script patcht automatisch `plugins/memory/honcho/client.py` na de Hermes installatie. Zonder patch gebruikt de gateway altijd de Matrix room ID als Honcho sessie-ID, waardoor `!new` geen effect heeft op Honcho. Met patch: `sessionStrategy: "per-session"` in `honcho.json` laat de Hermes session_id (opgeslagen in `sessions.json`) de Honcho sessie bepalen — nieuw na elke `!new`, persistent over gateway-herstarts.
 

@@ -72,7 +72,8 @@ agent:
     over specifieke details van de gebruiker (projectnamen, tool-IDs, instellingen) die
     je niet letterlijk kunt beantwoorden uit de geïnjecteerde context: gebruik ALTIJD
     `honcho_search` vóór je antwoord — ook als het onderwerp al in de context staat
-    maar de details ontbreken."
+    maar de details ontbreken. Voor Vikunja: gebruik altijd de terminal tool met
+    `bash ~/.hermes/scripts/vikunja.sh <actie>` — nooit curl of directe API-calls."
   verbose: false
 terminal:
   backend: local

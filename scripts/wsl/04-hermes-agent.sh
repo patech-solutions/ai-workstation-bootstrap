@@ -128,6 +128,23 @@ sed \
     "$CONFIG_DIR/SOUL.md" > "$SOUL_DST"
 echo "   SOUL.md geïnstalleerd"
 
+# .hermes.md — altijd installeren in hermes-agent werkmap (operationele context: Vikunja, Obsidian, systeem)
+# Staat in de gateway CWD zodat build_context_files_prompt() het automatisch laadt.
+# Gitignored in hermes-agent repo — wordt niet overschreven door git pull.
+echo "-- .hermes.md installeren --"
+HERMES_MD_DST="$HOME/.hermes/hermes-agent/.hermes.md"
+sed \
+    -e "s|__BOOTSTRAP_HONCHO_AI_PEER__|${HONCHO_AI}|g" \
+    -e "s|__BOOTSTRAP_HOSTNAME__|${BOOTSTRAP_HOSTNAME:-ai-workstation}|g" \
+    -e "s|__BOOTSTRAP_NAS_HOST__|${BOOTSTRAP_NAS_HOST:-}|g" \
+    -e "s|__BOOTSTRAP_MATRIX_ROOM_ID__|${BOOTSTRAP_MATRIX_ROOM_ID:-}|g" \
+    -e "s|__BOOTSTRAP_OUTLINE_URL__|${BOOTSTRAP_OUTLINE_URL:-}|g" \
+    -e "s|__BOOTSTRAP_VIKUNJA_HOST__|${BOOTSTRAP_VIKUNJA_HOST:-}|g" \
+    -e "s|__BOOTSTRAP_WINDOWS_USER__|${OBSIDIAN_WINDOWS_USER}|g" \
+    -e "s|__BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR__|${OBSIDIAN_VAULT_SUBDIR}|g" \
+    "$CONFIG_DIR/.hermes.md" > "$HERMES_MD_DST"
+echo "   .hermes.md geïnstalleerd in ~/.hermes/hermes-agent/"
+
 # MEMORY.md en USER.md — alleen installeren bij frisse installatie (zijn data, groeien over tijd)
 echo "-- basis geheugen installeren --"
 mkdir -p "$HOME/.hermes/memories"
