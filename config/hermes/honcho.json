@@ -1,12 +1,12 @@
 {
   "hosts": {
     "hermes": {
-      "peerName": "__HONCHO_PEER_NAME__",
-      "aiPeer": "__HONCHO_AI_PEER__",
-      "workspace": "__HONCHO_WORKSPACE__",
+      "peerName": "pascal",
+      "aiPeer": "atlas",
+      "workspace": "patech-wsa-01",
       "observationMode": "directional",
       "writeFrequency": "async",
-      "recallMode": "hybrid",
+      "recallMode": "tools",
       "dialecticCadence": 10,
       "dialecticReasoningLevel": "low",
       "sessionStrategy": "per-session",
