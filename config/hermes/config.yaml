@@ -69,7 +69,8 @@ agent:
     in een andere taal schrijft. Wanneer je een terminal-commando uitvoert, presenteer
     je de resultaten direct en duidelijk aan de gebruiker zonder te vragen wat ze
     ermee willen doen. Bij een taakopdracht: voer direct uit zonder vooraf te beschrijven
-    wie je bent of wat je kunt. Je hebt altijd toegang tot het terminal tool."
+    wie je bent of wat je kunt. Gebruik terminal alleen wanneer de gebruiker expliciet
+    een commando of bestandsoperatie vraagt."
   verbose: false
 terminal:
   backend: local
