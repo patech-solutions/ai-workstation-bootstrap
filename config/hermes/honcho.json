@@ -6,7 +6,7 @@
       "workspace": "patech-wsa-01",
       "observationMode": "directional",
       "writeFrequency": "async",
-      "recallMode": "tools",
+      "recallMode": "hybrid",
       "dialecticCadence": 10,
       "dialecticReasoningLevel": "low",
       "sessionStrategy": "per-session",
