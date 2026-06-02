@@ -82,6 +82,28 @@ sed \
     "$CONFIG_DIR/honcho.json" > "$HONCHO_DST"
 echo "   honcho.json geïnstalleerd (peer: ${HONCHO_PEER}, workspace: ${HONCHO_WS})"
 
+# model_metadata.py patch: MINIMUM_CONTEXT_LENGTH verlaagd naar qwen3:14b native max (40960).
+# De upstream waarde (64000) overschrijdt de native context van qwen3:14b en blokkeert tool use
+# op 12GB VRAM setups. 40960 is het maximum van qwen3:14b en past binnen 12GB VRAM.
+echo "-- model_metadata.py patchen (MINIMUM_CONTEXT_LENGTH voor 12GB VRAM) --"
+python3 - << 'PYEOF'
+import pathlib
+p = pathlib.Path.home() / '.hermes/hermes-agent/agent/model_metadata.py'
+if not p.exists():
+    print("   WAARSCHUWING: model_metadata.py niet gevonden, patch overgeslagen")
+    exit(0)
+old = p.read_text()
+old_str = 'MINIMUM_CONTEXT_LENGTH = 64_000'
+new_str = 'MINIMUM_CONTEXT_LENGTH = 40_960  # patched: qwen3:14b native max on 12GB VRAM'
+if new_str in old:
+    print("   patch al aanwezig")
+elif old_str in old:
+    p.write_text(old.replace(old_str, new_str, 1))
+    print("   patch toegepast")
+else:
+    print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
+PYEOF
+
 # Honcho client.py patch: per-session strategie bypassed gateway_session_key zodat
 # !new in Matrix een nieuwe Honcho sessie aanmaakt (session_id uit sessions.json).
 echo "-- honcho client.py patchen (per-session gateway bypass) --"
