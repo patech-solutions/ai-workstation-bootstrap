@@ -2,7 +2,7 @@ model:
   base_url: http://localhost:11434/v1
   default: qwen3:14b
   provider: custom
-  ollama_num_ctx: 16384
+  ollama_num_ctx: 12288
 providers: {}
 fallback_providers:
 - base_url: http://localhost:11434/v1

@@ -13,7 +13,7 @@
       "pinPeerName": true,
       "enabled": true,
       "saveMessages": true,
-      "contextTokens": 500
+      "contextTokens": 1000
     }
   },
   "baseUrl": "http://localhost:8000"
