@@ -7,7 +7,7 @@
       "observationMode": "directional",
       "writeFrequency": "async",
       "recallMode": "hybrid",
-      "dialecticCadence": 10,
+      "dialecticCadence": 9999,
       "dialecticReasoningLevel": "low",
       "sessionStrategy": "per-session",
       "pinPeerName": true,
