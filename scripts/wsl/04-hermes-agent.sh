@@ -125,6 +125,30 @@ else:
     print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
 PYEOF
 
+# honcho __init__.py patch: decoupleer _first_turn_timeout van de HTTP-client timeout.
+# Door "timeout" in honcho.json te verhogen (120s) kan de dialectic call slagen nadat de
+# hoofd-inference de GPU vrijgeeft. Zonder deze patch blokkeert diezelfde "timeout" ook
+# de first-turn join van de hoofdthread, waardoor de eerste response 120s vertraagd wordt.
+# De patch hardcodeert de first-turn join op 8s zodat responses niet worden vertraagd.
+echo "-- honcho __init__.py patchen (first-turn timeout decoupleren van HTTP timeout) --"
+python3 - << 'PYEOF'
+import pathlib
+p = pathlib.Path.home() / '.hermes/hermes-agent/plugins/memory/honcho/__init__.py'
+if not p.exists():
+    print("   WAARSCHUWING: __init__.py niet gevonden, patch overgeslagen")
+    exit(0)
+old = p.read_text()
+old_str = '            _first_turn_timeout = (\n                self._config.timeout if self._config and self._config.timeout else 8.0\n            )'
+new_str = '            _first_turn_timeout = 8.0  # patched: decoupleer van HTTP timeout (config.timeout)'
+if new_str in old:
+    print("   patch al aanwezig")
+elif old_str in old:
+    p.write_text(old.replace(old_str, new_str, 1))
+    print("   patch toegepast")
+else:
+    print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
+PYEOF
+
 # SOUL.md — altijd vanuit repo installeren (is configuratie, geen data)
 # Bestaande versie wordt gebackupt zodat niets verloren gaat
 echo "-- SOUL.md installeren --"
