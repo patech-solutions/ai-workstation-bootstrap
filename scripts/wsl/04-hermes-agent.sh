@@ -149,6 +149,37 @@ else:
     print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
 PYEOF
 
+# memory_tool.py patch: coerceer None/lege action en map veelgebruikte synoniemen.
+# qwen3:14b (en andere modellen) sturen soms action=None of synoniemen (update, store)
+# bij cognitieve druk. De patch voorkomt een fout-retour en onnodige retry-ronde.
+echo "-- memory_tool.py patchen (action=None coercion + synoniem-mapping) --"
+python3 - << 'PYEOF'
+import pathlib
+p = pathlib.Path.home() / '.hermes/hermes-agent/tools/memory_tool.py'
+if not p.exists():
+    print("   WAARSCHUWING: memory_tool.py niet gevonden, patch overgeslagen")
+    exit(0)
+old = p.read_text()
+old_str = '    if action == "add":'
+new_str = (
+    '    # patched: coerce None/empty + map common synonyms before dispatch\n'
+    '    action = action or ""\n'
+    '    _synonyms = {"update": "replace", "edit": "replace", "store": "add", "save": "add"}\n'
+    '    action = _synonyms.get(action, action)\n'
+    '    if action.lower() in ("", "none", "nothing_to_save", "skip", "no_action"):\n'
+    '        return json.dumps({"success": True, "skipped": True, "message": "No memory action taken"}, ensure_ascii=False)\n'
+    '\n'
+    '    if action == "add":'
+)
+if '# patched: coerce None/empty' in old:
+    print("   patch al aanwezig")
+elif old_str in old:
+    p.write_text(old.replace(old_str, new_str, 1))
+    print("   patch toegepast")
+else:
+    print("   WAARSCHUWING: patch-target niet gevonden — Hermes versie gewijzigd?")
+PYEOF
+
 # SOUL.md — altijd vanuit repo installeren (is configuratie, geen data)
 # Bestaande versie wordt gebackupt zodat niets verloren gaat
 echo "-- SOUL.md installeren --"
