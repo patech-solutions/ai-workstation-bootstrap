@@ -11,9 +11,22 @@ Hermes Agent is de primaire agentlaag. Installeer via:
 Dit script:
 - Installeert Hermes Agent via het officiële install-script
 - Installeert `faster-whisper` voor lokale STT
+- Bouwt `qwen3:14b` Modelfile met `num_ctx 8192`
 - Schrijft `context_length_cache.yaml` (Hermes rapporteert 40960 tokens voor Ollama, cache overschrijft naar 131072)
+- Installeert `config.yaml` vanuit de repo (altijd, met backup van bestaande versie)
+- Installeert `honcho.json` vanuit de repo (altijd, met backup van bestaande versie)
+- Past vier patches toe op Hermes bronbestanden (idempotent, zie sectie Patches hieronder)
 - Installeert `SOUL.md` vanuit de repo (altijd, met backup van bestaande versie)
+- Installeert `.hermes.md` in de hermes-agent werkmap (operationele configuratie: Vikunja, Obsidian, systeem)
 - Installeert `MEMORY.md` en `USER.md` alleen bij eerste installatie (zijn data, groeien over tijd)
+
+Na elke bootstrap-wijziging (config, patches, instructiebestanden) — zonder volledige herinstallatie:
+
+```bash
+./scripts/wsl/04-hermes-agent.sh --resync
+```
+
+`--resync` slaat de trage stappen over (Hermes installatie, faster-whisper, Modelfile bouwen) en voert alleen de snelle/idempotente stappen uit. Combineerbaar met `--reset-memory`.
 
 Na installatie is handmatige setup vereist (interactieve terminal):
 
@@ -37,10 +50,10 @@ Daarna de gateway als service starten:
 systemctl --user enable --now hermes-gateway.service
 ```
 
-**Let op:** `hermes setup` overschrijft `SOUL.md`. Herstel daarna:
+**Let op:** `hermes setup` overschrijft `SOUL.md`, `config.yaml` en `honcho.json`. Herstel daarna:
 
 ```bash
-cp ~/ai-workstation-bootstrap/config/hermes/SOUL.md ~/.hermes/SOUL.md
+./scripts/wsl/04-hermes-agent.sh --resync
 ```
 
 Relevante bestanden:
@@ -57,8 +70,19 @@ Relevante bestanden:
 **Belangrijk:** Na `hermes memory setup` moet `honcho.json` handmatig worden aangevuld met `pinPeerName: true` in het `hosts.hermes` blok. Zonder dit wordt de Matrix user ID gebruikt als peer naam, wat een leading dash introduceert en `honcho_conclude` kapot maakt. Het bootstrap script genereert `honcho.json` vanuit `config/hermes/honcho.json` met de juiste placeholders ingevuld — herstel na `hermes memory setup` met:
 
 ```bash
-./scripts/wsl/04-hermes-agent.sh
+./scripts/wsl/04-hermes-agent.sh --resync
 ```
+
+### Patches
+
+Het script past vier patches toe op Hermes bronbestanden na installatie. Alle patches zijn idempotent (veilig om meerdere keren toe te passen) en bevatten een waarschuwing als het patch-target niet meer gevonden wordt na een Hermes-update.
+
+| Bestand | Patch | Reden |
+|---|---|---|
+| `agent/model_metadata.py` | `MINIMUM_CONTEXT_LENGTH = 40_960` (was 64_000) | 64K overschrijdt de native context van qwen3:14b; blokkeert tool use op 12GB VRAM |
+| `plugins/memory/honcho/client.py` | `gateway_session_key` bypass bij `per-session` strategie | `!new` maakt anders geen nieuwe Honcho sessie aan |
+| `plugins/memory/honcho/__init__.py` | `_first_turn_timeout = 8.0` (hardcoded, was: `config.timeout`) | Voorkomt dat `timeout: 120` in honcho.json het eerste antwoord 120s vertraagt |
+| `tools/memory_tool.py` | `action=None` coercering + synoniem-mapping (`update`→`replace`, `store`→`add`) | qwen3:14b stuurt soms `action=None` of synoniemen onder cognitieve druk |
 
 ---
 
@@ -93,7 +117,7 @@ Embeddings lopen via `nomic-embed-text` (274 MB bestand, ~595 MB VRAM, 768 dimen
 
 De `dialecticCadence` bepaalt hoe vaak Honcho tussentijds een achtergrond-LLM-call doet om context te verversen (in beurten). Op een single-GPU setup concurreert deze achtergrondcall rechtstreeks met de hoofdinferentie van `qwen3:14b`, wat tot GPU contention en stille timeouts leidt.
 
-**Instelling: `dialecticCadence: 10`** (was `2`). De eerste achtergrondrefresh verschuift naar beurt 10. De session-start prewarm biedt context voor de eerste 9 beurten; in langere sessies volgt daarna een periodieke refresh.
+**Instelling: `dialecticCadence: 20`** (was `2` → `10` → `20`). De eerste achtergrondrefresh verschuift naar beurt 20. De session-start prewarm biedt context voor de eerste 19 beurten; in langere sessies volgt daarna een periodieke refresh. `dialecticReasoningLevel: minimal` beperkt de redeneeroverhead van de achtergrondcall.
 
 > **Niet terug naar `1` of `2`:** Bij cadence 2 trad een stille `honcho_conclude`-fout op tijdens W3 van het testprotocol omdat de Honcho API bezet was met een dialectic prefetch-call naar `qwen3:14b`. Atlas meldde "informatie verwerkt" terwijl de conclusie niet was opgeslagen.
 

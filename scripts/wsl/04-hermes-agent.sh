@@ -11,22 +11,34 @@ BOOTSTRAP_ENV="$REPO_ROOT/config/bootstrap.env"
 OBSIDIAN_WINDOWS_USER="${BOOTSTRAP_WINDOWS_USER:-${USER}}"
 OBSIDIAN_VAULT_SUBDIR="${BOOTSTRAP_OBSIDIAN_VAULT_SUBDIR:-AI-Workspace}"
 
-echo "== Hermes Agent installeren =="
+# Verwerk argumenten
+RESYNC=false
+RESET_MEMORY=false
+for arg in "$@"; do
+    case "$arg" in
+        --resync) RESYNC=true ;;
+        --reset-memory) RESET_MEMORY=true ;;
+    esac
+done
 
-# Installeer Hermes
-curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+if [[ "$RESYNC" != "true" ]]; then
+    echo "== Hermes Agent installeren =="
 
-# faster-whisper voor lokale STT
-echo "-- faster-whisper installeren --"
-uv pip install faster-whisper --python "$HOME/.hermes/hermes-agent/venv/bin/python"
+    # Installeer Hermes
+    curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
 
-# qwen3:14b Modelfile bouwen — PARAMETER num_ctx 8192 zodat Ollama altijd 8192 alloceert,
-# ook bij aanroepen vanuit Honcho Docker (die geen num_ctx meesturen).
-echo "-- qwen3:14b Modelfile bouwen --"
-mkdir -p "$HOME/.hermes/modelfiles"
-cp "$CONFIG_DIR/modelfiles/qwen3-14b.Modelfile" "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
-ollama create qwen3:14b -f "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
-echo "   qwen3:14b gebouwd met num_ctx 8192"
+    # faster-whisper voor lokale STT
+    echo "-- faster-whisper installeren --"
+    uv pip install faster-whisper --python "$HOME/.hermes/hermes-agent/venv/bin/python"
+
+    # qwen3:14b Modelfile bouwen — PARAMETER num_ctx 8192 zodat Ollama altijd 8192 alloceert,
+    # ook bij aanroepen vanuit Honcho Docker (die geen num_ctx meesturen).
+    echo "-- qwen3:14b Modelfile bouwen --"
+    mkdir -p "$HOME/.hermes/modelfiles"
+    cp "$CONFIG_DIR/modelfiles/qwen3-14b.Modelfile" "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
+    ollama create qwen3:14b -f "$HOME/.hermes/modelfiles/qwen3-14b.Modelfile"
+    echo "   qwen3:14b gebouwd met num_ctx 8192"
+fi
 
 # Context length cache (Hermes vereist >=64K, Ollama rapporteert 40960)
 echo "-- context_length_cache.yaml instellen --"
@@ -253,7 +265,7 @@ else
 fi
 
 # --reset-memory flag: overschrijf geheugenbestanden ook (met backup)
-if [[ "${1:-}" == "--reset-memory" ]]; then
+if [[ "$RESET_MEMORY" == "true" ]]; then
     echo "-- geheugen resetten (--reset-memory) --"
     for f in MEMORY.md USER.md; do
         DST="$HOME/.hermes/memories/$f"
@@ -287,7 +299,11 @@ Na setup:
   systemctl --user enable hermes-gateway.service
   systemctl --user start hermes-gateway.service
 
-SOUL.md en honcho.json worden hersteld door dit script opnieuw te draaien.
-Let op: hermes setup overschrijft honcho.json. Herstel daarna met:
-  cp ~/ai-workstation-bootstrap/config/hermes/honcho.json ~/.hermes/honcho.json
+Na elke bootstrap-wijziging (config.yaml, honcho.json, patches, SOUL.md, .hermes.md):
+  ./scripts/wsl/04-hermes-agent.sh --resync
+  → Slaat Hermes installatie, faster-whisper en Modelfile bouwen over.
+  → Alleen de snelle/idempotente stappen worden uitgevoerd.
+
+Let op: hermes setup overschrijft honcho.json en config.yaml. Herstel daarna met:
+  ./scripts/wsl/04-hermes-agent.sh --resync
 MSG
