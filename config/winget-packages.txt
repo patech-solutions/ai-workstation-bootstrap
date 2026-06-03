@@ -1,6 +1,6 @@
 Git.Git
 Microsoft.VisualStudioCode
-Docker.DockerDesktop
+WireGuard.WireGuard
 Microsoft.PowerShell
 Microsoft.WindowsTerminal
 OpenJS.NodeJS.LTS
