@@ -26,5 +26,6 @@ chmod +x scripts/wsl/*.sh
 ./scripts/wsl/04-hermes-agent.sh
 ./scripts/wsl/05-honcho.sh
 ./scripts/wsl/06-open-webui.sh
+./scripts/wsl/08-ollama-gpu-warmup.sh
 
 echo "WSL bootstrap complete."

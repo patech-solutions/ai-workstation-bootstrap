@@ -1,0 +1,8 @@
+[wsl2]
+# guiApplications=false: WSLg compositor uitgeschakeld — geen GUI-apps via WSL.
+# Scheelt GPU-geheugen dat anders door de compositor wordt geclaimd.
+guiApplications=false
+
+# autoMemoryReclaim=disabled: WSL geeft geen gecached RAM terug aan Windows.
+# Voorkomt geheugendruk die GPU-evictie kan triggeren.
+autoMemoryReclaim=disabled
