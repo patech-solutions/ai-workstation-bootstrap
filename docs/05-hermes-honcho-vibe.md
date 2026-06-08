@@ -129,7 +129,9 @@ Sleutelconfiguratie in `.env`:
 | `EMBED_MESSAGES` | `false` | Geen berichtembeddings; alleen representaties |
 | `EMBEDDING_MODEL_CONFIG__MODEL` | `nomic-embed-text` | Past in VRAM naast qwen3:14b |
 | `EMBEDDING_VECTOR_DIMENSIONS` | `768` | Dimensies van nomic-embed-text |
-| `DERIVER_FLUSH_ENABLED` | `false` | Deriver uitgeschakeld (zie sectie Deriver) |
+| `DERIVER_FLUSH_ENABLED` | `true` | Deriver ingeschakeld voor sessieverwerking |
+| `DERIVER_ENABLED` | `true` | Deriver actief |
+| `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
 | `DERIVER_STALE_SESSION_TIMEOUT_MINUTES` | `15` | Wacht 15 min inactiviteit voor verwerking |
 | `DERIVER_DEDUPLICATE` | `true` | Dedupliceert conclusions binnen een deriver-run |
 | `DREAM_IDLE_TIMEOUT_MINUTES` | `30` | Dream consolideert na 30 min inactiviteit (na het bereiken van de drempel) |
@@ -137,9 +139,11 @@ Sleutelconfiguratie in `.env`:
 | `DREAM_DOCUMENT_THRESHOLD` | `50` (standaard) | Minimaal aantal expliciete documenten per collectie voordat Dream triggert. Elke deriver-sessie voegt ~10-15 docs toe. |
 | Alle `*_MODEL_CONFIG__MODEL` | `qwen3:14b` | Één model in VRAM, geen evictie |
 
-### Deriver
+### Deriver & Dream
 
-**De deriver is ingeschakeld.** Verwerkt sessies automatisch na 15 minuten inactiviteit en extraheert conclusies. Dream consolideert conclusies naar peer-representaties na 30 minuten inactiviteit (minimaal 4 uur tussen cycli).
+**De deriver is ingeschakeld** (`DERIVER_ENABLED=true`, `DERIVER_FLUSH_ENABLED=true`). Verwerkt sessies automatisch na 15 minuten inactiviteit (`DERIVER_STALE_SESSION_TIMEOUT_MINUTES=15`) en extraheert conclusies. 
+
+**Dream is actief** (`DREAM_MIN_HOURS_BETWEEN_DREAMS=4`): consolideert conclusies naar peer-representaties na 30 minuten inactiviteit (`DREAM_IDLE_TIMEOUT_MINUTES=30`), met een minimum interval van 4 uur tussen dream-cycli.
 
 **Dream hallucineert in deductieve laag bij speculatieve Atlas-antwoorden.** De deriver extraheert observaties van beide kanten — ook Atlas's antwoorden. Als Atlas suggestieve of vooruitblikkende antwoorden geeft, worden die als feiten opgeslagen. Dream's deductieve redenering voegt daar niet-ondersteunde specificiteit aan toe (verzonnen deadlines, causaliteitsketens). qwen3:14b gebruikt de systeemdatum als anker.
 
