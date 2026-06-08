@@ -46,7 +46,7 @@ chmod +x scripts/wsl/*.sh
 ./scripts/wsl/05-honcho.sh
 ```
 
-Na `04-hermes-agent.sh`: voer `hermes setup` en `hermes memory setup` uit (interactief, zie `docs/05-hermes-honcho-codex-claude.md`).
+Na `04-hermes-agent.sh`: voer `hermes setup` en `hermes memory setup` uit (interactief, zie `docs/05-hermes-honcho-vibe.md`).
 
 ## 7. Web interfaces
 
@@ -58,8 +58,8 @@ Na `04-hermes-agent.sh`: voer `hermes setup` en `hermes memory setup` uit (inter
 ## 8. CLI tools
 
 ```bash
-npm install -g @openai/codex
-npm install -g @anthropic-ai/claude-code
+pip install -U mistral-vibe
+vibe auth login
 ```
 
 ## 9. Verify

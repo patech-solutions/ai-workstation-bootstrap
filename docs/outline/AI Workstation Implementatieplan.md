@@ -12,7 +12,7 @@ Dit document beschrijft de inrichting van een mobiele AI-workstation op basis va
 - Lokale LLM runtime via Ollama.
 - Agentlaag via Hermes Agent.
 - Memorylaag via Honcho.
-- Code-assistentie via Codex en Claude.
+- Code-assistentie via Vibe.
 - Configuratie geschikt voor demonstraties, ontwikkeling en klantwerk.
 
 ## Architectuurlagen
@@ -43,8 +43,7 @@ Belangrijkste onderdelen:
 - Node/npm/nvm
 - Docker CLI via Docker Desktop
 - jq, ripgrep, fzf, tmux, shellcheck
-- Codex CLI
-- Claude CLI
+- Vibe CLI
 - Hermes Agent
 - Honcho client/server integratie
 
@@ -86,8 +85,7 @@ Voorbeeldrollen:
 13. Ollama en Open WebUI testen.
 14. Hermes Agent configureren.
 15. Honcho configureren.
-16. Codex CLI installeren en login uitvoeren.
-17. Claude CLI installeren en login uitvoeren.
+16. Vibe CLI installeren en login uitvoeren.
 18. Lokale modellen downloaden.
 19. Verificatiescript draaien.
 20. Resultaat documenteren.
@@ -154,8 +152,7 @@ chmod +x scripts/wsl/*.sh
 ./scripts/wsl/02-ai-tools.sh
 ./scripts/wsl/03-hermes-agent.sh
 ./scripts/wsl/04-honcho.sh
-./scripts/wsl/05-codex-cli.sh
-./scripts/wsl/06-claude-cli.sh
+./scripts/wsl/05-vibe-cli.sh
 ./scripts/wsl/07-models-ollama.sh
 ./scripts/wsl/99-verify-wsl.sh
 ```
@@ -223,27 +220,16 @@ Hermes zelf wordt niet blind geïnstalleerd omdat jouw exacte distributie/instal
 ~/.local/bin/hermes
 ```
 
-## Codex CLI
+## Vibe CLI
 
 Installatie:
 
 ```bash
-npm install -g @openai/codex
-codex login
+pip install -U mistral-vibe
+vibe auth login
 ```
 
 Gebruik OAuth waar mogelijk. API keys niet in Git plaatsen.
-
-## Claude CLI / Claude Code
-
-Installatie:
-
-```bash
-npm install -g @anthropic-ai/claude-code
-claude
-```
-
-Let op: Anthropic kan extra billing/usage setup vereisen voordat OAuth/API-gebruik werkt.
 
 ## Acceptatiecriteria
 
@@ -258,8 +244,7 @@ De workstation is initieel goed ingericht wanneer:
 - Ollama reageert op `localhost:11434`.
 - Open WebUI draait op `localhost:3000`.
 - Honcho draait of is bewust als TODO gemarkeerd.
-- Codex CLI is geïnstalleerd.
-- Claude CLI is geïnstalleerd.
+- Vibe CLI is geïnstalleerd.
 - Hermes config staat klaar.
 - Verificatiescript geeft geen onverwachte fouten.
 
@@ -281,8 +266,7 @@ De workstation is initieel goed ingericht wanneer:
 - [ ] Ollama modellen gedownload
 - [ ] Hermes Agent klaar voor configuratie
 - [ ] Honcho klaar voor configuratie
-- [ ] Codex login gedaan
-- [ ] Claude login gedaan
+- [ ] Vibe login gedaan
 - [ ] Verificatie uitgevoerd
 
 ## Latere uitbreidingen

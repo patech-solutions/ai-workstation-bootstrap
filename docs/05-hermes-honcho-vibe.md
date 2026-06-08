@@ -1,4 +1,4 @@
-# Hermes, Honcho, Codex en Claude
+# Hermes, Honcho en Vibe
 
 ## Hermes Agent
 
@@ -208,24 +208,18 @@ systemctl --user status honcho-dashboard.service
 
 ---
 
-## Codex CLI
+## Vibe CLI
 
-Codex wordt via npm geïnstalleerd:
-
-```bash
-npm install -g @openai/codex
-```
-
-Daarna inloggen via de CLI/OAuth-flow.
-
----
-
-## Claude CLI / Claude Code
-
-Claude wordt via npm geïnstalleerd:
+Vibe wordt geïnstalleerd via pip:
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+pip install -U mistral-vibe
 ```
 
-Inloggen via `claude` (OAuth of API key). Vereist een Anthropic-account met API-toegang.
+Daarna inloggen via de CLI:
+
+```bash
+vibe auth login
+```
+
+Vibe is de opvolger van Claude Code en biedt soortgelijke functionaliteit met Mistral modellen.

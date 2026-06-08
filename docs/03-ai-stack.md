@@ -46,7 +46,7 @@ Dashboard op: `http://localhost:8080`
 
 Na installatie: `hermes memory setup` → kies Lokaal → `http://localhost:8000`
 
-Zie `docs/05-hermes-honcho-codex-claude.md` voor uitleg over embeddings, VRAM-profiel en configuratieparameters.
+Zie `docs/05-hermes-honcho-vibe.md` voor uitleg over embeddings, VRAM-profiel en configuratieparameters.
 
 ## LiteLLM optioneel
 

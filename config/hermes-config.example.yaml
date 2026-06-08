@@ -15,7 +15,7 @@ routing:
     write:
       model: qwen/qwen3.6-plus
     premium:
-      model: claude-sonnet-4-6
+      model: qwen3:14b
 
 local:
   ollama_base_url: http://localhost:11434

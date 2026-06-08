@@ -51,22 +51,12 @@ Run:
 source ~/.bashrc
 ```
 
-## Codex login issue
+## Vibe login issue
 
 Try:
 
 ```bash
-codex login
+vibe auth login
 ```
 
-If OAuth fails, check OpenAI account and billing/access status.
-
-## Claude login issue
-
-Run:
-
-```bash
-claude
-```
-
-If login works but model use fails, check Anthropic billing/usage requirements.
+If login fails, check Mistral AI account and API key configuration.

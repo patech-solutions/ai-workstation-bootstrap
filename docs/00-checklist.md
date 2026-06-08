@@ -37,13 +37,12 @@
 - [ ] Modellen pullen (`03-models-ollama.sh` — qwen3:14b, gemma4:e4b, qwen3:8b, llama3.1:8b)
 - [ ] Open WebUI starten (`06-open-webui.sh` — bereikbaar op `:3000`)
 - [ ] Hermes Agent installeren (`04-hermes-agent.sh` — SOUL.md + basis geheugen)
-- [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief, zie `05-hermes-honcho-codex-claude.md`)
+- [ ] Hermes setup afronden (`hermes setup` + `hermes memory setup` — interactief, zie `05-hermes-honcho-vibe.md`)
 - [ ] SOUL.md herstellen na `hermes setup` (setup overschrijft het bestand)
 - [ ] Honcho starten (`05-honcho.sh` — Docker stack + dashboard service)
 - [ ] Honcho API bereikbaar: `curl http://localhost:8000/health`
 - [ ] Honcho Dashboard bereikbaar: `http://localhost:8080`
-- [ ] Codex CLI installeren (`npm install -g @openai/codex`)
-- [ ] Claude CLI installeren (`npm install -g @anthropic-ai/claude-code`)
+- [ ] Vibe CLI installeren (`pip install -U mistral-vibe`)
 
 ## Validatie
 
