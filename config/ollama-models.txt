@@ -1,20 +1,14 @@
 # AI Workstation — Ollama modellen
-# Volgorde: standaardmodel eerst (grootste prioriteit voor VRAM-warmte)
+# Ollama draait in WSL, niet in Windows (geen Ollama.Ollama in winget).
+# Volgorde: primair eerst.
 
-# Primair model — qwen3:14b (tool-support, gebalanceerd conversatie/tools, ollama_num_ctx 8192 via config.yaml)
+# Primair — qwen3-14b-atlas (Qwen3 14B, 128K ctx, tool-support)
+# Gebouwd via: ollama create qwen3-14b-atlas -f ~/.hermes/modelfiles/qwen3-14b-atlas.Modelfile
 qwen3:14b
 
-# qwen3-30b:iq2xxs — goed model, maar KV-limiet problematisch bij Hermes-promptgrootte
-# qwen3-30b:iq2xxs
-
-# Fallback + Honcho deriver/summary/dream
-# qwen3:8b
+# Fallback — qwen3-8b-atlas (Qwen3 8B, 128K ctx, tool-support)
+# Gebouwd via: ollama create qwen3-8b-atlas -f ~/.hermes/modelfiles/qwen3-8b-atlas.Modelfile
+qwen3:8b
 
 # Vision / afbeeldingsanalyse
 gemma4:e4b
-
-# Lichtgewicht optie
-qwen3:8b
-
-# Backup generatiemodel
-llama3.1:8b
